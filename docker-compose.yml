@@ -1,0 +1,37 @@
+services:
+  fastapi:
+    build: ./fastapi-service
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./fastapi-service:/app
+    develop:
+      watch:
+        - action: sync
+          path: ./fastapi-service
+          target: /app
+
+  streamlit:
+    build: ./streamlit-app
+    ports:
+      - "8501:8501"
+    environment:
+      - FASTAPI_URL=http://fastapi:8000
+    volumes:
+      - ./streamlit-app:/app
+    depends_on:
+      - fastapi
+
+  # Placeholder for the Next.js frontend (currently lives in nope-ai-contrarian-ai).
+  # Uncomment once that app is moved/copied into ./frontend and points its API
+  # calls at the fastapi service instead of its own /api routes.
+  # frontend:
+  #   build: ./frontend
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - NEXT_PUBLIC_API_URL=http://localhost:8000
+  #   depends_on:
+  #     - fastapi
