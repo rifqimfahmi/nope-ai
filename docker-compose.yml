@@ -7,6 +7,7 @@ services:
       - .env
     volumes:
       - ./fastapi-service:/app
+      - /app/.venv
     develop:
       watch:
         - action: sync
@@ -21,6 +22,7 @@ services:
       - FASTAPI_URL=http://fastapi:8000
     volumes:
       - ./streamlit-app:/app
+      - /app/.venv
     depends_on:
       - fastapi
 
