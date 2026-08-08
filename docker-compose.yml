@@ -7,7 +7,7 @@ services:
       - .env
     volumes:
       - ./fastapi-service:/app
-      - /app/.venv
+      - fastapi-venv:/app/.venv
     develop:
       watch:
         - action: sync
@@ -22,7 +22,7 @@ services:
       - FASTAPI_URL=http://fastapi:8000
     volumes:
       - ./streamlit-app:/app
-      - /app/.venv
+      - streamlit-venv:/app/.venv
     depends_on:
       - fastapi
 
@@ -37,3 +37,7 @@ services:
   #     - NEXT_PUBLIC_API_URL=http://localhost:8000
   #   depends_on:
   #     - fastapi
+
+volumes:
+  fastapi-venv:
+  streamlit-venv:

@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterator
 from functools import lru_cache
 from typing import TypedDict
 
@@ -92,12 +93,19 @@ def _compiled_graph(api_key: str, model: str, max_loops: int):
     return graph.compile()
 
 
-async def run_challenge(fact: str, settings: Settings) -> str:
+async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[dict]:
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is required for the challenge agent loop")
 
     app = _compiled_graph(settings.anthropic_api_key, settings.agent_model, settings.max_review_loops)
-    result: ChallengeState = await app.ainvoke(
-        {"fact": fact, "draft": "", "feedback": None, "iteration": 0, "approved": False}
-    )
-    return result["draft"]
+    initial_state: ChallengeState = {
+        "fact": fact,
+        "draft": "",
+        "feedback": None,
+        "iteration": 0,
+        "approved": False,
+    }
+
+    async for update in app.astream(initial_state, stream_mode="updates"):
+        for node_name, node_state in update.items():
+            yield {"node": node_name, **node_state}
