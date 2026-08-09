@@ -13,6 +13,9 @@ from app.schemas import ChallengeRequest
 router = APIRouter()
 tracer = trace.get_tracer(__name__)
 
+PHASE_GENERATING = "generating"
+PHASE_REVIEWING = "reviewing"
+
 
 def _now_ms() -> int:
     return int(time.time() * 1000)
@@ -35,21 +38,18 @@ async def challenge_me(payload: ChallengeRequest) -> EventSourceResponse:
     async def event_generator() -> AsyncIterator[dict[str, str]]:
         with tracer.start_as_current_span("challenge_me"):
             try:
-                final_draft = ""
+                yield _sse("phase", PHASE_GENERATING)
                 async for update in run_challenge_stream(payload.fact, get_settings()):
                     print(f"stream {update}")
-                    if update["node"] == "generate":
-                        final_draft = update["draft"]
-                        if update["feedback"]:
-                            yield _sse("chunk", f'Revising based on feedback: "{final_draft}"')
-                        else:
-                            yield _sse("chunk", f'Drafting a reply: "{final_draft}"')
-                    elif update["node"] == "review":
-                        if update["approved"]:
-                            yield _sse("chunk", "Review passed.")
-                        else:
-                            yield _sse("chunk", f'Review requested changes: "{update["feedback"]}"')
-                yield _sse("complete", final_draft)
+                    if update["type"] == "messages" and update["node"] == "generate":
+                        yield _sse("token", update["content"])
+                    elif update["type"] == "complete":
+                        yield _sse("complete", update["draft"])
+                    elif update["type"] == "updates":
+                        if update["node"] == "generate":
+                            yield _sse("phase", PHASE_REVIEWING)
+                        elif update["node"] == "review" and not update["approved"]:
+                            yield _sse("phase", PHASE_GENERATING)
             except Exception as exc:  # noqa: BLE001 - surface any agent failure as an SSE error event
                 yield _sse("error", str(exc))
 

@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
-from typing import TypedDict
+from typing import Literal, TypedDict, cast
 
 from langchain_anthropic import ChatAnthropic
 from langgraph.graph import END, START, StateGraph
@@ -18,45 +18,82 @@ REVIEWER_SYSTEM_PROMPT = (
 )
 
 
+HISTORY_WINDOW = 3
+
+
+class ChallengeTurn(TypedDict):
+    draft: str
+    feedback: str
+
+
 class ChallengeState(TypedDict):
     fact: str
     draft: str
     feedback: str | None
     iteration: int
     approved: bool
+    history: list[ChallengeTurn]
+
+
+class MessageEvent(TypedDict):
+    node: Literal["generate", "review"]
+    type: Literal["messages"]
+    content: str
+
+
+class UpdateEvent(ChallengeState):
+    node: Literal["generate", "review"]
+    type: Literal["updates"]
+
+
+class CompleteEvent(TypedDict):
+    type: Literal["complete"]
+    draft: str
+
+
+StreamEvent = MessageEvent | UpdateEvent | CompleteEvent
 
 
 async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
     messages = [*CONTRARIAN_PROMPTS, {"role": "user", "content": state["fact"]}]
-    if state["feedback"]:
-        messages.append({"role": "assistant", "content": state["draft"]})
+    for turn in state["history"][-HISTORY_WINDOW:]:
+        messages.append({"role": "assistant", "content": turn["draft"]})
         messages.append(
             {
                 "role": "user",
-                "content": f'A reviewer said: "{state["feedback"]}". Write a better one-sentence reply.',
+                "content": f'A reviewer said: "{turn["feedback"]}". Write a better one-sentence reply.',
             }
         )
-    response = await model.ainvoke(messages)
-    return {**state, "draft": response.text}
+    chunks = [chunk async for chunk in model.astream(messages)]
+    full = chunks[0]
+    for chunk in chunks[1:]:
+        full += chunk
+    return {**state, "draft": full.text}
 
 
 async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
-    response = await model.ainvoke(
-        [
-            {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
-            {
-                "role": "user",
-                "content": f'User\'s fact: "{state["fact"]}"\nChatbot\'s reply: "{state["draft"]}"',
-            },
-        ]
-    )
-    verdict = response.text.strip()
+    messages = [
+        {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
+        {
+            "role": "user",
+            "content": f'User\'s fact: "{state["fact"]}"\nChatbot\'s reply: "{state["draft"]}"',
+        },
+    ]
+    chunks = [chunk async for chunk in model.astream(messages)]
+    full = chunks[0]
+    for chunk in chunks[1:]:
+        full += chunk
+    verdict = full.text.strip()
     approved = verdict.upper().startswith("LGTM")
+    history = state["history"]
+    if not approved:
+        history = [*history, {"draft": state["draft"], "feedback": verdict}][-HISTORY_WINDOW:]
     return {
         **state,
         "approved": approved,
         "feedback": None if approved else verdict,
         "iteration": state["iteration"] + 1,
+        "history": history,
     }
 
 
@@ -64,10 +101,10 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
 def _compiled_graph(api_key: str, model: str, max_loops: int):
     secret_api_key = SecretStr(api_key)
     generate_model = ChatAnthropic(
-        model_name=model, api_key=secret_api_key, temperature=0.9, max_tokens_to_sample=256, timeout=None, stop=None
+        model=model, api_key=secret_api_key, temperature=0.9, max_tokens=256, timeout=None, stop=None
     )
     review_model = ChatAnthropic(
-        model_name=model, api_key=secret_api_key, temperature=0, max_tokens_to_sample=100, timeout=None, stop=None
+        model=model, api_key=secret_api_key, temperature=0, max_tokens=100, timeout=None, stop=None
     )
 
     async def generate_node(state: ChallengeState) -> ChallengeState:
@@ -91,7 +128,7 @@ def _compiled_graph(api_key: str, model: str, max_loops: int):
     return graph.compile()
 
 
-async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[dict]:
+async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[StreamEvent]:
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is required for the challenge agent loop")
 
@@ -102,8 +139,34 @@ async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[d
         "feedback": None,
         "iteration": 0,
         "approved": False,
+        "history": [],
     }
 
-    async for update in app.astream(initial_state, stream_mode="updates"):
-        for node_name, node_state in update.items():
-            yield {"node": node_name, **node_state}
+    final_draft = initial_state["draft"]
+    async for part in app.astream(initial_state, stream_mode=["updates", "messages"], version="v2"):
+        if part["type"] == "messages":
+            message_chunk, metadata = part["data"]
+            node_name = metadata.get("langgraph_node")
+            content = message_chunk.content
+            if node_name in ("generate", "review") and isinstance(content, str) and content:
+                message_event: MessageEvent = {
+                    "node": node_name,
+                    "type": "messages",
+                    "content": content,
+                }
+                yield message_event
+        elif part["type"] == "updates":
+            for node_name, raw_state in part["data"].items():
+                if node_name in ("generate", "review"):
+                    state = cast(ChallengeState, raw_state)
+                    update_event: UpdateEvent = {
+                        "node": node_name, 
+                        "type": "updates", 
+                        **state
+                    }
+                    yield update_event
+                    if node_name == "review":
+                        final_draft = state["draft"]
+
+    complete_event: CompleteEvent = {"type": "complete", "draft": final_draft}
+    yield complete_event
