@@ -6,10 +6,13 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "anthropic>=0.120.2",
+    "arize-phoenix-otel>=0.17.0",
     "fastapi>=0.141.1",
     "huggingface-hub>=1.27.0",
+    "langchain-anthropic>=1.5.4",
     "langgraph>=1.2.10",
     "openai>=2.53.0",
+    "openinference-instrumentation-langchain>=0.1.70",
     "pydantic-settings>=2.15.0",
     "sse-starlette>=3.4.8",
     "uvicorn[standard]>=0.52.1",

@@ -28,7 +28,7 @@ if go:
             response.raise_for_status()
             for line in response.iter_lines(decode_unicode=True):
                 if not line or not line.startswith("data:"):
-                    continue
+                    continuke
                 event = json.loads(line[len("data:") :].strip())
 
                 if event["type"] == "chunk":

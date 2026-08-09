@@ -16,12 +16,16 @@ class Settings(BaseSettings):
     anthropic_model: str = "claude-sonnet-5"
 
     agent_model: str = "claude-haiku-4-5-20251001"
+    review_model: str = "claude-sonnet-4-6"
     max_review_loops: int = 6
 
     openai_api_key: str | None = None
     openai_model: str = "gpt-4"
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8501"]
+
+    phoenix_collector_endpoint: str | None = None
+    phoenix_project_name: str = "nope-ai-contrarian"
 
 
 @lru_cache

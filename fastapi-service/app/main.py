@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import get_settings
 from app.routers.challenge import router as challenge_router
+from app.telemetry import configure_tracing
 
 settings = get_settings()
+configure_tracing(settings)
 
 app = FastAPI(title="nope-ai contrarian agent")
 

@@ -2,8 +2,9 @@ from collections.abc import AsyncIterator
 from functools import lru_cache
 from typing import TypedDict
 
-from anthropic import AsyncAnthropic
+from langchain_anthropic import ChatAnthropic
 from langgraph.graph import END, START, StateGraph
+from pydantic import SecretStr
 
 from app.config import Settings
 from app.prompts import CONTRARIAN_PROMPTS
@@ -25,41 +26,31 @@ class ChallengeState(TypedDict):
     approved: bool
 
 
-async def _generate(client: AsyncAnthropic, model: str, state: ChallengeState) -> ChallengeState:
+async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
     messages = [*CONTRARIAN_PROMPTS, {"role": "user", "content": state["fact"]}]
     if state["feedback"]:
+        messages.append({"role": "assistant", "content": state["draft"]})
         messages.append(
             {
                 "role": "user",
-                "content": (
-                    f'Your previous reply was: "{state["draft"]}". '
-                    f'A reviewer said: "{state["feedback"]}". Write a better one-sentence reply.'
-                ),
+                "content": f'A reviewer said: "{state["feedback"]}". Write a better one-sentence reply.',
             }
         )
-    system_prompt = next(m["content"] for m in messages if m["role"] == "system")
-    chat_messages = [m for m in messages if m["role"] != "system"]
+    response = await model.ainvoke(messages)
+    return {**state, "draft": response.text}
 
-    response = await client.messages.create(
-        model=model,
-        max_tokens=256,
-        temperature=0.9,
-        system=system_prompt,
-        messages=chat_messages,
+
+async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
+    response = await model.ainvoke(
+        [
+            {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
+            {
+                "role": "user",
+                "content": f'User\'s fact: "{state["fact"]}"\nChatbot\'s reply: "{state["draft"]}"',
+            },
+        ]
     )
-    draft = "".join(block.text for block in response.content if block.type == "text")
-    return {**state, "draft": draft}
-
-
-async def _review(client: AsyncAnthropic, model: str, state: ChallengeState) -> ChallengeState:
-    response = await client.messages.create(
-        model=model,
-        max_tokens=100,
-        temperature=0,
-        system=REVIEWER_SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": state["draft"]}],
-    )
-    verdict = "".join(block.text for block in response.content if block.type == "text").strip()
+    verdict = response.text.strip()
     approved = verdict.upper().startswith("LGTM")
     return {
         **state,
@@ -71,13 +62,19 @@ async def _review(client: AsyncAnthropic, model: str, state: ChallengeState) -> 
 
 @lru_cache
 def _compiled_graph(api_key: str, model: str, max_loops: int):
-    client = AsyncAnthropic(api_key=api_key)
+    secret_api_key = SecretStr(api_key)
+    generate_model = ChatAnthropic(
+        model_name=model, api_key=secret_api_key, temperature=0.9, max_tokens_to_sample=256, timeout=None, stop=None
+    )
+    review_model = ChatAnthropic(
+        model_name=model, api_key=secret_api_key, temperature=0, max_tokens_to_sample=100, timeout=None, stop=None
+    )
 
     async def generate_node(state: ChallengeState) -> ChallengeState:
-        return await _generate(client, model, state)
+        return await _generate(generate_model, state)
 
     async def review_node(state: ChallengeState) -> ChallengeState:
-        return await _review(client, model, state)
+        return await _review(review_model, state)
 
     def route(state: ChallengeState) -> str:
         if state["approved"] or state["iteration"] >= max_loops:
@@ -87,6 +84,7 @@ def _compiled_graph(api_key: str, model: str, max_loops: int):
     graph = StateGraph(ChallengeState)
     graph.add_node("generate", generate_node)
     graph.add_node("review", review_node)
+
     graph.add_edge(START, "generate")
     graph.add_edge("generate", "review")
     graph.add_conditional_edges("review", route, {"retry": "generate", "end": END})
