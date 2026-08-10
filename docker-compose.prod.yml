@@ -1,0 +1,24 @@
+# Production overlay. Layers on top of the base docker-compose.yml (dev/local
+# stack) rather than replacing it - fastapi/streamlit don't have production
+# targets yet, so this only touches `frontend`.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build frontend
+#
+# No env vars needed here: FASTAPI_URL/DATABASE_URL from the base file are
+# already correct in this stack (frontend, fastapi and postgres all share one
+# Docker network in both dev and prod), and neither is a build-time secret -
+# both are read server-side, at request time, by this app's own route
+# handlers (src/app/api/). Nothing is exposed to the browser.
+#
+# Migrations are NOT run automatically - the `runner` target deliberately
+# excludes drizzle-kit to stay small. Apply them separately before deploying:
+#   cd frontend && DATABASE_URL=... pnpm db:migrate
+
+services:
+  frontend:
+    build:
+      target: runner
+    # The dev stage's bind mount + anti-shadow volumes don't apply to the
+    # self-contained runner image - clear them instead of running the
+    # production container with the host's ./frontend mounted over it.
+    volumes: !reset []

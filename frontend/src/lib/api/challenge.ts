@@ -1,7 +1,5 @@
 import { challengeRequestSchema, streamEventSchema, type StreamEvent } from "@/lib/schemas";
 
-const FASTAPI_URL = process.env.NEXT_PUBLIC_API_URL;
-
 function parseSseEvent(rawEvent: string): StreamEvent | null {
   const dataLines = rawEvent
     .split("\n")
@@ -14,16 +12,12 @@ function parseSseEvent(rawEvent: string): StreamEvent | null {
   return parsed.success ? parsed.data : null;
 }
 
-/** Streams `POST /challenge-me` on the FastAPI service, yielding parsed SSE events as they arrive. */
+/** Streams our own `/api/challenge-me` proxy (which forwards to the FastAPI service), yielding parsed SSE events as they arrive. */
 export async function* streamChallenge(
   input: string,
   signal?: AbortSignal,
 ): AsyncGenerator<StreamEvent> {
-  if (!FASTAPI_URL) {
-    throw new Error("NEXT_PUBLIC_API_URL is not set");
-  }
-
-  const response = await fetch(`${FASTAPI_URL}/challenge-me`, {
+  const response = await fetch("/api/challenge-me", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(challengeRequestSchema.parse({ input })),

@@ -14,14 +14,13 @@ COPY . .
 EXPOSE 3000
 CMD ["sh", "-c", "pnpm db:migrate && pnpm dev"]
 
-# Stage: builder - production build. NEXT_PUBLIC_API_URL gets baked into the
-# client bundle at build time. DATABASE_URL is intentionally NOT needed here -
-# the standalone server (runner stage) only reads it at request time.
+# Stage: builder - production build. No build-time secrets needed: the browser
+# never talks to FastAPI or Postgres directly (see src/app/api/), it only ever
+# calls this app's own route handlers, which read FASTAPI_URL/DATABASE_URL at
+# request time in the runner stage below.
 FROM deps AS builder
 COPY . .
 
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm build
@@ -29,8 +28,8 @@ RUN pnpm build
 # Stage: runner (default target) - minimal production image running the
 # Next.js `standalone` output (see `output: "standalone"` in next.config.ts):
 #
-#   docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t nope-ai-frontend .
-#   docker run -p 3000:3000 -e DATABASE_URL=postgres://... nope-ai-frontend
+#   docker build -t nope-ai-frontend .
+#   docker run -p 3000:3000 -e FASTAPI_URL=... -e DATABASE_URL=... nope-ai-frontend
 #
 # Run `pnpm db:migrate` against the target database as a separate deploy step -
 # drizzle-kit is a devDependency and isn't present in this stage.
