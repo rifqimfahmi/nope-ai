@@ -49,6 +49,25 @@ pnpm db:migrate    # applies pending migrations
 pnpm db:studio     # browse the data
 ```
 
+## Docker
+
+`Dockerfile` is multi-stage with three targets:
+
+- `dev` — used by the root `docker-compose.yml` for local development
+  (bind-mounted source, `pnpm dev`)
+- `builder` — runs `next build` (needs `NEXT_PUBLIC_API_URL` as a build arg,
+  since it's baked into the client bundle; does **not** need `DATABASE_URL`,
+  since Postgres is only connected to lazily at request time)
+- `runner` (default target) — minimal production image running the Next.js
+  `standalone` output. No `drizzle-kit`, so it never runs migrations itself —
+  apply those separately (see [Database](#database)) before pointing traffic
+  at it.
+
+```bash
+docker build --build-arg NEXT_PUBLIC_API_URL=https://api.example.com -t nope-ai-frontend .
+docker run -p 3000:3000 -e DATABASE_URL=postgres://... nope-ai-frontend
+```
+
 ## Notes on the SSE client
 
 `fastapi-service` streams via `sse_starlette`, which terminates each line with

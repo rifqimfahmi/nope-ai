@@ -4,13 +4,13 @@ services:
     ports:
       - "5433:5432"
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-nope_ai}
+      - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER must be set in .env}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      - POSTGRES_DB=${POSTGRES_DB:?POSTGRES_DB must be set in .env}
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set in .env}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -54,37 +54,29 @@ services:
     depends_on:
       - fastapi
 
+  # Production image (target: runner - see frontend/Dockerfile). Migrations are
+  # NOT run automatically; apply them against DATABASE_URL as a separate deploy
+  # step before starting this service (`pnpm db:migrate` from ./frontend, or
+  # `docker compose build frontend --target migrator` if you add one later).
   frontend:
     build:
       context: ./frontend
-      target: dev
+      target: runner
+      args:
+        # Baked into the client bundle at build time - changing it requires a rebuild.
+        NEXT_PUBLIC_API_URL: http://localhost:8000
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - DATABASE_URL=postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-nope_ai}
-    volumes:
-      - ./frontend:/app
-      - frontend-node-modules:/app/node_modules
-      - frontend-next:/app/.next
+      - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
     depends_on:
       postgres:
         condition: service_healthy
       fastapi:
         condition: service_started
-    develop:
-      watch:
-        - action: sync
-          path: ./frontend
-          target: /app
-          ignore:
-            - node_modules/
-            - .next/
 
 volumes:
   fastapi-venv:
   streamlit-venv:
   phoenix-data:
   postgres-data:
-  frontend-node-modules:
-  frontend-next:

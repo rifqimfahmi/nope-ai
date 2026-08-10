@@ -48,9 +48,19 @@ docker compose up --build
 - Postgres: localhost:5433 (mapped to avoid clashing with a local Postgres on
   the default 5432)
 
-The `frontend` service applies migrations itself via `pnpm db:migrate` — run it
-manually (see above) the first time if you're running the frontend outside
-Docker.
+`frontend` builds and runs the production image (`target: runner` in
+`frontend/Dockerfile`), so it does **not** apply migrations itself — that image
+deliberately excludes `drizzle-kit` (a devDependency) to stay small. Apply the
+schema once, from your host, before the challenge history endpoints will work:
+
+```bash
+cd frontend
+DATABASE_URL=postgres://postgres:postgres@localhost:5433/nope_ai pnpm db:migrate
+```
+
+(For local iteration on the frontend itself, running it outside Docker via
+`pnpm dev` — see the quick-start above — is generally easier than rebuilding
+the production image on every change.)
 
 ## Switching LLM providers
 
