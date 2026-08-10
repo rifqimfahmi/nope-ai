@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.wrapper {
+  @apply flex flex-col gap-4;
+}
+
+.claim {
+  @apply text-sm font-medium text-base-content/60 italic;
+}
+
+.reply {
+  @apply text-2xl font-semibold leading-relaxed whitespace-pre-wrap;
+}
+
+.actions {
+  @apply mt-2 flex flex-wrap items-center gap-3;
+}
+
+.copy {
+  @apply btn btn-outline btn-sm;
+}
+
+.again {
+  @apply link link-primary text-sm font-medium;
+}

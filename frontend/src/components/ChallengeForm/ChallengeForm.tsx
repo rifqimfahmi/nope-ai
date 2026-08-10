@@ -1,10 +1,21 @@
 "use client";
 
-import { useState, type SubmitEvent } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 
 import { challengeRequestSchema } from "@/lib/schemas";
 
 import styles from "./ChallengeForm.module.scss";
+
+const EXAMPLES = [
+  "Water is wet.",
+  "The earth is round.",
+  "Coffee is good for you.",
+  "Cats are better than dogs.",
+  "Money can't buy happiness.",
+];
+
+const MAX_LENGTH = 500;
+const PLACEHOLDER_ROTATE_MS = 2800;
 
 interface ChallengeFormProps {
   onSubmit: (input: string) => void;
@@ -14,6 +25,15 @@ interface ChallengeFormProps {
 export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
   const [value, setValue] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [placeholderIndex, setPlaceholderIndex] = useState(0);
+
+  useEffect(() => {
+    if (value) return;
+    const interval = setInterval(() => {
+      setPlaceholderIndex((index) => (index + 1) % EXAMPLES.length);
+    }, PLACEHOLDER_ROTATE_MS);
+    return () => clearInterval(interval);
+  }, [value]);
 
   function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -26,30 +46,60 @@ export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
     onSubmit(parsed.data.input);
   }
 
+  function handleExampleClick(example: string) {
+    setValue(example);
+    setValidationError(null);
+  }
+
   return (
     <form className={styles.form} onSubmit={handleSubmit}>
       <label className={styles.label} htmlFor="challenge-input">
         Say something you believe is true
       </label>
-      <div className={styles.row}>
-        <input
-          id="challenge-input"
-          className={styles.input}
-          type="text"
-          placeholder="Water is wet."
-          value={value}
-          onChange={(event) => setValue(event.target.value)}
-          disabled={disabled}
-        />
-        <button
-          className={styles.submit}
-          type="submit"
-          disabled={disabled || value.trim().length === 0}
-        >
-          Challenge me
-        </button>
+
+      <div className={styles.card}>
+        <div className={styles.cardInner}>
+          <textarea
+            id="challenge-input"
+            className={styles.textarea}
+            placeholder={EXAMPLES[placeholderIndex]}
+            value={value}
+            maxLength={MAX_LENGTH}
+            rows={3}
+            onChange={(event) => setValue(event.target.value)}
+            disabled={disabled}
+          />
+          <div className={styles.cardFooter}>
+            <span className={styles.count}>
+              {value.length}/{MAX_LENGTH}
+            </span>
+            <button
+              className={styles.submit}
+              type="submit"
+              disabled={disabled || value.trim().length === 0}
+            >
+              Challenge me →
+            </button>
+          </div>
+        </div>
       </div>
+
       {validationError && <p className={styles.error}>{validationError}</p>}
+
+      <div className={styles.examples}>
+        <span className={styles.examplesLabel}>Try one:</span>
+        {EXAMPLES.map((example) => (
+          <button
+            key={example}
+            type="button"
+            className={styles.chip}
+            onClick={() => handleExampleClick(example)}
+            disabled={disabled}
+          >
+            {example}
+          </button>
+        ))}
+      </div>
     </form>
   );
 }
