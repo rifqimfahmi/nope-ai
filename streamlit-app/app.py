@@ -48,7 +48,7 @@ if go:
         try:
             with requests.post(
                 f"{FASTAPI_URL}/challenge-me",
-                json={"fact": fact},
+                json={"input": fact},
                 stream=True,
                 timeout=60,
             ) as response:

@@ -39,7 +39,7 @@ async def challenge_me(payload: ChallengeRequest) -> EventSourceResponse:
         with tracer.start_as_current_span("challenge_me"):
             try:
                 yield _sse("phase", PHASE_GENERATING)
-                async for update in run_challenge_stream(payload.fact, get_settings()):
+                async for update in run_challenge_stream(payload.input, get_settings()):
                     print(f"stream {update}")
                     if update["type"] == "messages" and update["node"] == "generate":
                         yield _sse("token", update["content"])

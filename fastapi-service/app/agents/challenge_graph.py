@@ -31,7 +31,7 @@ class ChallengeTurn(TypedDict):
 
 
 class ChallengeState(TypedDict):
-    fact: str
+    input: str
     draft: str
     feedback: str | None
     iteration: int
@@ -59,7 +59,7 @@ StreamEvent = MessageEvent | UpdateEvent | CompleteEvent
 
 
 async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
-    messages = [*CONTRARIAN_PROMPTS, {"role": "user", "content": state["fact"]}]
+    messages = [*CONTRARIAN_PROMPTS, {"role": "user", "content": state["input"]}]
     for turn in state["history"][-HISTORY_WINDOW:]:
         messages.append({"role": "assistant", "content": turn["draft"]})
         messages.append(
@@ -84,7 +84,7 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
         {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
         {
             "role": "user",
-            "content": f'User\'s fact: "{state["fact"]}"\nChatbot\'s reply: "{state["draft"]}"',
+            "content": f'User\'s fact: "{state["input"]}"\nChatbot\'s reply: "{state["draft"]}"',
         },
     ]
     chunks = [chunk async for chunk in model.astream(messages)]
@@ -136,15 +136,18 @@ def _compiled_graph(api_key: str, generate_model_name: str, review_model_name: s
     return graph.compile()
 
 
-async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[StreamEvent]:
+async def run_challenge_stream(input: str, settings: Settings) -> AsyncIterator[StreamEvent]:
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is required for the challenge agent loop")
 
     app = _compiled_graph(
-        settings.anthropic_api_key, settings.agent_model, settings.review_model, settings.max_review_loops
+        settings.anthropic_api_key,
+        settings.agent_model,
+        settings.review_model,
+        settings.max_review_loops
     )
     initial_state: ChallengeState = {
-        "fact": fact,
+        "input": input,
         "draft": "",
         "feedback": None,
         "iteration": 0,

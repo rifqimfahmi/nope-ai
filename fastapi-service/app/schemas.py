@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 
 
 class ChallengeRequest(BaseModel):
-    fact: str = Field(min_length=1)
+    input: str = Field(min_length=1)
 
 
 class StreamChunk(BaseModel):
