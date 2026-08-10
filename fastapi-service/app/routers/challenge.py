@@ -41,9 +41,9 @@ async def challenge_me(payload: ChallengeRequest) -> EventSourceResponse:
                 yield _sse("phase", PHASE_GENERATING)
                 async for update in run_challenge_stream(payload.input, get_settings()):
                     print(f"stream {update}")
-                    if update["type"] == "messages" and update["node"] == "generate":
-                        yield _sse("token", update["content"])
-                    elif update["type"] == "complete":
+                    # if update["type"] == "messages" and update["node"] == "generate":
+                    #     yield _sse("token", update["content"])
+                    if update["type"] == "complete":
                         yield _sse("complete", update["draft"])
                     elif update["type"] == "updates":
                         if update["node"] == "generate":
