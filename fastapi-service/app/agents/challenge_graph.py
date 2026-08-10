@@ -12,7 +12,11 @@ from app.prompts import CONTRARIAN_PROMPTS
 REVIEWER_SYSTEM_PROMPT = (
     "You review a 'Playful Contrarian' chatbot's reply to a user's fact. The reply must: "
     "(1) cheerfully disagree with the fact, (2) give a simple, common-sense, everyday reason "
-    "with no jargon, (3) be a single punchy sentence, (4) never agree with the user. "
+    "with no jargon, (3) be a single punchy sentence, (4) never agree with the user - the "
+    "reply's substantive stance must be the OPPOSITE of the user's claim, not just phrased "
+    "with contrarian-sounding words like 'Actually' or 'I disagree'. For comparison facts "
+    "('A is better than B'), reject any reply that ends up siding with A even if it criticizes "
+    "B along the way; the reply must argue for B. "
     "If the reply satisfies all four rules, respond with exactly: LGTM "
     "Otherwise respond with one short sentence describing what to fix, and nothing else."
 )
@@ -61,7 +65,11 @@ async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeSta
         messages.append(
             {
                 "role": "user",
-                "content": f'A reviewer said: "{turn["feedback"]}". Write a better one-sentence reply.',
+                "content": (
+                    f'A reviewer said: "{turn["feedback"]}". Write a better one-sentence reply. '
+                    "Reply with ONLY the new sentence itself - no acknowledgement, preamble, "
+                    "or meta-commentary such as \"Got it\" or \"Here's a proper disagreement:\"."
+                ),
             }
         )
     chunks = [chunk async for chunk in model.astream(messages)]
@@ -98,13 +106,13 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
 
 
 @lru_cache
-def _compiled_graph(api_key: str, model: str, max_loops: int):
+def _compiled_graph(api_key: str, generate_model_name: str, review_model_name: str, max_loops: int):
     secret_api_key = SecretStr(api_key)
     generate_model = ChatAnthropic(
-        model=model, api_key=secret_api_key, temperature=0.9, max_tokens=256, timeout=None, stop=None
+        model=generate_model_name, api_key=secret_api_key, temperature=0.9, max_tokens=256, timeout=None, stop=None
     )
     review_model = ChatAnthropic(
-        model=model, api_key=secret_api_key, temperature=0, max_tokens=100, timeout=None, stop=None
+        model=review_model_name, api_key=secret_api_key, temperature=0, max_tokens=100, timeout=None, stop=None
     )
 
     async def generate_node(state: ChallengeState) -> ChallengeState:
@@ -132,7 +140,9 @@ async def run_challenge_stream(fact: str, settings: Settings) -> AsyncIterator[S
     if not settings.anthropic_api_key:
         raise RuntimeError("ANTHROPIC_API_KEY is required for the challenge agent loop")
 
-    app = _compiled_graph(settings.anthropic_api_key, settings.agent_model, settings.max_review_loops)
+    app = _compiled_graph(
+        settings.anthropic_api_key, settings.agent_model, settings.review_model, settings.max_review_loops
+    )
     initial_state: ChallengeState = {
         "fact": fact,
         "draft": "",
