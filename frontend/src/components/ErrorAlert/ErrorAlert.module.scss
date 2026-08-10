@@ -1,0 +1,5 @@
+@reference "../../app/globals.css";
+
+.alert {
+  @apply alert alert-error text-sm;
+}

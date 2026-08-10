@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.card {
+  @apply card card-border flex-row items-start justify-between gap-3 bg-base-100 p-4;
+}
+
+.body {
+  @apply flex flex-1 flex-col gap-1;
+}
+
+.input {
+  @apply text-sm text-base-content/60;
+}
+
+.reply {
+  @apply font-medium;
+}
+
+.timestamp {
+  @apply text-xs text-base-content/40;
+}
+
+.deleteButton {
+  @apply btn btn-ghost btn-xs btn-circle;
+}

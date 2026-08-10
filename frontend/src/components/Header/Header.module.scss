@@ -1,0 +1,17 @@
+@reference "../../app/globals.css";
+
+.bar {
+  @apply navbar bg-base-100 border-b border-base-300 px-4 sm:px-6;
+}
+
+.titleGroup {
+  @apply flex flex-1 flex-col;
+}
+
+.title {
+  @apply text-xl font-bold tracking-tight;
+}
+
+.subtitle {
+  @apply text-sm text-base-content/60;
+}

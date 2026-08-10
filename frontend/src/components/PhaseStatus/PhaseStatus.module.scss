@@ -1,0 +1,17 @@
+@reference "../../app/globals.css";
+
+.row {
+  @apply flex items-center gap-2;
+}
+
+.spinner {
+  @apply loading loading-spinner loading-sm text-primary;
+}
+
+.label {
+  @apply text-sm font-medium text-base-content/70;
+}
+
+.errorLabel {
+  @apply text-sm font-medium text-error;
+}

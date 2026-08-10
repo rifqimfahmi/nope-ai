@@ -1,0 +1,9 @@
+@reference "../../app/globals.css";
+
+.answer {
+  @apply text-lg font-semibold leading-relaxed;
+}
+
+.cursor {
+  @apply ml-0.5 animate-pulse text-primary;
+}

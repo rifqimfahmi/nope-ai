@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.section {
+  @apply flex w-full flex-col gap-3;
+}
+
+.heading {
+  @apply flex items-center justify-between;
+}
+
+.title {
+  @apply text-sm font-semibold text-base-content/70;
+}
+
+.clearButton {
+  @apply btn btn-ghost btn-xs;
+}
+
+.list {
+  @apply flex flex-col gap-2;
+}
+
+.empty {
+  @apply text-sm text-base-content/40;
+}

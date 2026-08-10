@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.form {
+  @apply flex w-full flex-col gap-2;
+}
+
+.label {
+  @apply text-sm font-medium text-base-content/70;
+}
+
+.row {
+  @apply flex flex-col gap-2 sm:flex-row;
+}
+
+.input {
+  @apply input flex-1;
+}
+
+.submit {
+  @apply btn btn-primary;
+}
+
+.error {
+  @apply text-sm text-error;
+}

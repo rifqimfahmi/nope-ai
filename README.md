@@ -12,8 +12,10 @@ AI/implementation side lives in Python (FastAPI) instead of the Next.js API rout
   HuggingFace, Anthropic, or OpenAI, selected via `LLM_PROVIDER` in `.env`.
 - [`streamlit-app/`](streamlit-app/README.md) — throwaway UI for manually testing
   the agent without a frontend.
-- `frontend/` (not yet created) — future home for a Next.js frontend that talks to
-  the FastAPI service instead of the old built-in API routes.
+- [`frontend/`](frontend/README.md) — the real Next.js frontend. Talks to the
+  FastAPI service directly (client-side SSE) for the challenge stream, and to its
+  own Drizzle/Postgres-backed `/api/history` route handlers to persist past
+  challenges.
 
 See each service's own README for detailed setup/run instructions. Quick version:
 
@@ -22,7 +24,16 @@ cp .env.example .env   # fill in HF_TOKEN (or switch LLM_PROVIDER + the matching
 
 cd fastapi-service && uv run uvicorn app.main:app --reload   # http://localhost:8000
 cd streamlit-app && uv run streamlit run app.py              # http://localhost:8501
+
+cd frontend
+cp .env.example .env.local   # points at FastAPI + your Postgres
+pnpm install
+pnpm db:migrate                # apply the challenges table schema
+pnpm dev                       # http://localhost:3000
 ```
+
+The frontend needs a Postgres database reachable at `DATABASE_URL`. The easiest
+way to get one locally is `docker compose up -d postgres` (see below).
 
 ## Running with Docker Compose
 
@@ -33,6 +44,13 @@ docker compose up --build
 
 - FastAPI: http://localhost:8000 (docs at `/docs`)
 - Streamlit: http://localhost:8501
+- Frontend: http://localhost:3000
+- Postgres: localhost:5433 (mapped to avoid clashing with a local Postgres on
+  the default 5432)
+
+The `frontend` service applies migrations itself via `pnpm db:migrate` — run it
+manually (see above) the first time if you're running the frontend outside
+Docker.
 
 ## Switching LLM providers
 
