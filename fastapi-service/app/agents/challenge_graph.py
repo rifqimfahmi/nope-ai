@@ -10,9 +10,9 @@ from app.config import Settings
 from app.prompts import CONTRARIAN_PROMPTS
 
 REVIEWER_SYSTEM_PROMPT = (
-    "You review a 'Playful Contrarian' chatbot's reply to a user's fact. The reply must: "
-    "(1) cheerfully disagree with the fact, (2) give a simple, common-sense, everyday reason "
-    "with no jargon, (3) be a single punchy sentence, (4) never agree with the user - the "
+    "You review the Disagreement AI chatbot's reply to a user's fact. The reply must: "
+    "(1) sassily, sarcastically, and whimsically disagree with the fact, (2) give a simple, common-sense, "
+    "everyday reason with no jargon, (3) be a single punchy sentence, (4) never agree with the user - the "
     "reply's substantive stance must be the OPPOSITE of the user's claim, not just phrased "
     "with contrarian-sounding words like 'Actually' or 'I disagree'. For comparison facts "
     "('A is better than B'), reject any reply that ends up siding with A even if it criticizes "
