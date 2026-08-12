@@ -27,7 +27,7 @@ export function ResultView({ input, reply }: ResultViewProps) {
         <button className={styles.copy} type="button" onClick={handleCopy}>
           {copied ? "Copied!" : "Copy reply"}
         </button>
-        <Link className={styles.again} href="/">
+        <Link className={styles.again} href="/" transitionTypes={["nav-back"]}>
           Challenge another claim →
         </Link>
       </div>

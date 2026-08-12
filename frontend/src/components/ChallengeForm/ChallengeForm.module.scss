@@ -25,11 +25,11 @@
 }
 
 .count {
-  @apply text-xs tabular-nums text-base-content/40;
+  @apply text-xs text-base-content/40 tabular-nums;
 }
 
 .submit {
-  @apply btn btn-primary btn-sm transition-transform active:scale-95 sm:btn-md;
+  @apply btn transition-transform btn-primary btn-sm active:scale-95 sm:btn-md;
 }
 
 .error {
@@ -45,5 +45,5 @@
 }
 
 .chip {
-  @apply btn btn-ghost btn-sm rounded-full border border-base-300 text-xs font-normal normal-case transition-colors hover:border-primary hover:text-primary disabled:opacity-40;
+  @apply btn rounded-full border border-base-300 btn-ghost text-xs font-normal normal-case transition-colors btn-sm hover:border-primary hover:text-primary disabled:opacity-40;
 }
