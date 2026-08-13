@@ -23,12 +23,12 @@ interface CompletedResult {
 export default function Home() {
   const [result, setResult] = useState<CompletedResult | null>(null);
   const createHistoryMutation = useCreateHistoryMutation();
-  const { status, draft, error, start, reset } = useChallengeStream((input, reply) => {
+  const { status, message, draft, error, start, reset } = useChallengeStream((input, reply) => {
     createHistoryMutation.mutate(
       { input, reply },
       {
         onSuccess: (row) => {
-          window.history.pushState(null, "", `/result/${row.id}`);
+          window.history.pushState(null, "", `/nope/${row.id}`);
           startTransition(() => {
             addTransitionType("nav-forward");
             setResult(row);
@@ -61,7 +61,7 @@ export default function Home() {
     });
   }
 
-  const streaming = status === "generating" || status === "reviewing";
+  const streaming = status === "active";
 
   return (
     <div className={styles.page}>
@@ -77,7 +77,7 @@ export default function Home() {
           ) : (
             <>
               <ChallengeForm onSubmit={start} disabled={streaming} />
-              <PhaseStatus status={status} />
+              <PhaseStatus status={status} message={message} />
               {error && <ErrorAlert message={error} />}
               {/* <StreamingAnswer text={draft} streaming={streaming} /> */}
               {/* <HistoryList /> */}

@@ -6,17 +6,14 @@ export const challengeRequestSchema = z.object({
 
 export type ChallengeRequest = z.infer<typeof challengeRequestSchema>;
 
-const phaseContentSchema = z.enum(["generating", "reviewing"]);
-
 export const streamEventSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("phase"), content: phaseContentSchema, timestamp: z.number() }),
+  z.object({ type: z.literal("phase"), content: z.string(), timestamp: z.number() }),
   z.object({ type: z.literal("token"), content: z.string(), timestamp: z.number() }),
   z.object({ type: z.literal("complete"), content: z.string(), timestamp: z.number() }),
   z.object({ type: z.literal("error"), content: z.string(), timestamp: z.number() }),
 ]);
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;
-export type Phase = z.infer<typeof phaseContentSchema>;
 
 export const historyItemSchema = z.object({
   id: z.number(),

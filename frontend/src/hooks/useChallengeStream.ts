@@ -3,17 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { streamChallenge } from "@/lib/api/challenge";
-import type { Phase } from "@/lib/schemas";
 
-export type ChallengeStatus = "idle" | Phase | "done" | "error";
+export type ChallengeStatus = "idle" | "active" | "done" | "error";
 
 interface ChallengeStreamState {
   status: ChallengeStatus;
+  message: string;
   draft: string;
   error: string | null;
 }
 
-const INITIAL_STATE: ChallengeStreamState = { status: "idle", draft: "", error: null };
+const INITIAL_STATE: ChallengeStreamState = {
+  status: "idle",
+  message: "",
+  draft: "",
+  error: null,
+};
 
 export function useChallengeStream(onComplete?: (input: string, reply: string) => void) {
   const [state, setState] = useState<ChallengeStreamState>(INITIAL_STATE);
@@ -31,27 +36,23 @@ export function useChallengeStream(onComplete?: (input: string, reply: string) =
     const controller = new AbortController();
     abortRef.current = controller;
 
-    setState({ status: "generating", draft: "", error: null });
+    setState({ status: "active", message: "", draft: "", error: null });
 
     try {
       for await (const event of streamChallenge(input, controller.signal)) {
         switch (event.type) {
           case "phase":
-            setState((prev) => ({
-              status: event.content,
-              draft: event.content === "generating" ? "" : prev.draft,
-              error: null,
-            }));
+            setState((prev) => ({ ...prev, status: "active", message: event.content, error: null }));
             break;
           case "token":
             setState((prev) => ({ ...prev, draft: prev.draft + event.content }));
             break;
           case "complete":
-            setState({ status: "done", draft: event.content, error: null });
+            setState({ status: "done", message: "", draft: event.content, error: null });
             onCompleteRef.current?.(input, event.content);
             break;
           case "error":
-            setState({ status: "error", draft: "", error: event.content });
+            setState({ status: "error", message: "", draft: "", error: event.content });
             break;
         }
       }
@@ -59,6 +60,7 @@ export function useChallengeStream(onComplete?: (input: string, reply: string) =
       if (controller.signal.aborted) return;
       setState({
         status: "error",
+        message: "",
         draft: "",
         error: err instanceof Error ? err.message : "Something went wrong.",
       });

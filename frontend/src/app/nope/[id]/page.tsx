@@ -20,7 +20,7 @@ async function getChallenge(id: string) {
 
 export async function generateMetadata({
   params,
-}: PageProps<"/result/[id]">): Promise<Metadata> {
+}: PageProps<"/nope/[id]">): Promise<Metadata> {
   const { id } = await params;
   const challenge = await getChallenge(id);
 
@@ -29,7 +29,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ResultPage({ params }: PageProps<"/result/[id]">) {
+export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
   const { id } = await params;
   const challenge = await getChallenge(id);
 
