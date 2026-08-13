@@ -68,6 +68,7 @@ export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
             rows={3}
             onChange={(event) => setValue(event.target.value)}
             disabled={disabled}
+            autoComplete="off"
           />
           <div className={styles.cardFooter}>
             <span className={styles.count}>
