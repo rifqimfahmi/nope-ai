@@ -1,24 +1,102 @@
 # Production overlay. Layers on top of the base docker-compose.yml (dev/local
-# stack) rather than replacing it - fastapi/streamlit don't have production
-# targets yet, so this only touches `frontend`.
+# stack) rather than replacing it. streamlit has no place in prod, so it's
+# simply never named in the `up` command below - it's still defined in the
+# base file (for dev), just not started.
 #
-#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build frontend
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     up -d --build frontend fastapi postgres-prod phoenix-prod
 #
-# No env vars needed here: FASTAPI_URL/DATABASE_URL from the base file are
-# already correct in this stack (frontend, fastapi and postgres all share one
-# Docker network in both dev and prod), and neither is a build-time secret -
-# both are read server-side, at request time, by this app's own route
-# handlers (src/app/api/). Nothing is exposed to the browser.
+#   # Metabase is opt-in even in prod (same as dev's `--profile tools`):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --profile tools up -d metabase-prod
+#
+# postgres-prod, phoenix-prod and metabase-prod are separate services (own
+# volumes, own - or no - host ports) so prod data never lives alongside dev's,
+# and the two stacks can run side by side on one host without colliding.
+# `frontend` and `fastapi` stay as the same service names as the base file -
+# only their build target and, where relevant, the hostnames they talk to
+# change - since they're stateless and don't need an isolated instance the
+# way the data-holding services do.
+#
+# FASTAPI_URL/DATABASE_URL are not build-time secrets - both are read
+# server-side, at request time, by this app's own route handlers
+# (src/app/api/). Nothing is exposed to the browser.
 #
 # Migrations are NOT run automatically - the `runner` target deliberately
 # excludes drizzle-kit to stay small. Apply them separately before deploying:
-#   cd frontend && DATABASE_URL=... pnpm db:migrate
+#   cd frontend && DATABASE_URL=postgres://...@postgres-prod:5432/... pnpm db:migrate
 
 services:
+  postgres-prod:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER must be set in .env}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      - POSTGRES_DB=${POSTGRES_DB:?POSTGRES_DB must be set in .env}
+    volumes:
+      - postgres-prod-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:?POSTGRES_USER must be set in .env}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # No host port mapping - only reachable from other containers on the
+    # same Docker network (frontend), unlike dev's `postgres` which exposes
+    # 5433 for local psql/GUI access.
+
+  phoenix-prod:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6008:6006" # Phoenix UI + OTLP HTTP collector (dev uses 6007)
+      - "4319:4317" # OTLP gRPC collector (dev uses 4318)
+    volumes:
+      - phoenix-prod-data:/mnt/data
+
+  fastapi:
+    build:
+      target: runner
+    environment:
+      - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix-prod:4317
+    # The dev stage's bind mount + venv volume don't apply to the
+    # self-contained runner image - clear them instead of running the
+    # production container with the host's ./fastapi-service mounted over it.
+    volumes: !reset []
+    depends_on: !override
+      - phoenix-prod
+
   frontend:
     build:
       target: runner
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
     # The dev stage's bind mount + anti-shadow volumes don't apply to the
     # self-contained runner image - clear them instead of running the
     # production container with the host's ./frontend mounted over it.
     volumes: !reset []
+    depends_on: !override
+      fastapi:
+        condition: service_started
+      postgres-prod:
+        condition: service_healthy
+
+  # Prod's own Metabase, pointed at postgres-prod as its external data source
+  # (added through the Metabase UI on first login, same as dev - see the base
+  # file's `metabase` service). Kept behind the same `tools` profile as dev.
+  metabase-prod:
+    image: metabase/metabase:latest
+    container_name: nope-ai-2_metabase_prod
+    restart: unless-stopped
+    profiles:
+      - tools
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
+    volumes:
+      - ./metabase-data-prod:/metabase-data
+    ports:
+      - "127.0.0.1:3005:3000" # dev uses 3004
+    depends_on:
+      - postgres-prod
+
+volumes:
+  postgres-prod-data:
+  phoenix-prod-data:

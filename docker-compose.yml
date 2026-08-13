@@ -24,7 +24,9 @@ services:
       - phoenix-data:/mnt/data
 
   fastapi:
-    build: ./fastapi-service
+    build:
+      context: ./fastapi-service
+      target: dev
     ports:
       - "8000:8000"
     env_file:
