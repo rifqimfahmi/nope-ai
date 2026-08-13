@@ -30,11 +30,15 @@ export function ResultView({ input, reply, onAgain }: ResultViewProps) {
         </button>
         {onAgain ? (
           <button className={styles.again} type="button" onClick={onAgain}>
-            Challenge another claim →
+            Retry
           </button>
         ) : (
-          <Link className={styles.again} href="/" transitionTypes={["nav-back"]}>
-            Challenge another claim →
+          <Link
+            className={styles.again}
+            href="/"
+            transitionTypes={["nav-back"]}
+          >
+            Retry
           </Link>
         )}
       </div>

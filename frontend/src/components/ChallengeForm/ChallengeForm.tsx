@@ -78,7 +78,7 @@ export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
               type="submit"
               disabled={disabled || value.trim().length === 0}
             >
-              Challenge me →
+              Nope →
             </button>
           </div>
         </div>

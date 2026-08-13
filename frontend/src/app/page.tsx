@@ -79,7 +79,7 @@ export default function Home() {
               <ChallengeForm onSubmit={start} disabled={streaming} />
               <PhaseStatus status={status} />
               {error && <ErrorAlert message={error} />}
-              <StreamingAnswer text={draft} streaming={streaming} />
+              {/* <StreamingAnswer text={draft} streaming={streaming} /> */}
               {/* <HistoryList /> */}
             </>
           )}
