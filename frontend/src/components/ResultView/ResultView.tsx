@@ -8,9 +8,10 @@ import styles from "./ResultView.module.scss";
 interface ResultViewProps {
   input: string;
   reply: string;
+  onAgain?: () => void;
 }
 
-export function ResultView({ input, reply }: ResultViewProps) {
+export function ResultView({ input, reply, onAgain }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -27,9 +28,15 @@ export function ResultView({ input, reply }: ResultViewProps) {
         <button className={styles.copy} type="button" onClick={handleCopy}>
           {copied ? "Copied!" : "Copy reply"}
         </button>
-        <Link className={styles.again} href="/" transitionTypes={["nav-back"]}>
-          Challenge another claim →
-        </Link>
+        {onAgain ? (
+          <button className={styles.again} type="button" onClick={onAgain}>
+            Challenge another claim →
+          </button>
+        ) : (
+          <Link className={styles.again} href="/" transitionTypes={["nav-back"]}>
+            Challenge another claim →
+          </Link>
+        )}
       </div>
     </div>
   );

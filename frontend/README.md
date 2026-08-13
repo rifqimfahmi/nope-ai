@@ -1,6 +1,6 @@
 # frontend
 
-The real UI for the Contrarian Agent. The browser only ever talks to this
+The real UI for Nope AI. The browser only ever talks to this
 app's own origin — `src/app/api/challenge-me/route.ts` proxies server-side to
 [`fastapi-service`](../fastapi-service) for the challenge SSE stream, and
 `src/app/api/history/` handlers own the Postgres-backed challenge history

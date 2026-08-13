@@ -25,7 +25,7 @@ export async function generateMetadata({
   const challenge = await getChallenge(id);
 
   return {
-    title: challenge ? `"${challenge.input}" — Contrarian Agent` : "Result — Contrarian Agent",
+    title: challenge ? `"${challenge.input}" — Nope AI` : "Result — Nope AI",
   };
 }
 

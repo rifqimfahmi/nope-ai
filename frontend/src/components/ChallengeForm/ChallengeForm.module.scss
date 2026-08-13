@@ -9,11 +9,11 @@
 }
 
 .card {
-  @apply rounded-2xl bg-linear-to-br/oklch from-primary via-secondary to-accent p-[2px] shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-primary/30;
+  @apply rounded-2xl bg-linear-to-br/oklch from-red-600 via-red-500 to-orange-500 p-[2px] shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-red-500/30;
 }
 
 .cardInner {
-  @apply flex flex-col gap-2 rounded-[14px] bg-base-100 p-4;
+  @apply flex flex-col gap-2 rounded-[14px] bg-base-200 p-4;
 }
 
 .textarea {
@@ -29,7 +29,7 @@
 }
 
 .submit {
-  @apply btn transition-transform btn-primary btn-sm active:scale-95 sm:btn-md;
+  @apply btn border-red-600 bg-red-600 text-white transition-transform btn-sm hover:border-red-500 hover:bg-red-500 active:scale-95 sm:btn-md;
 }
 
 .error {
@@ -45,5 +45,5 @@
 }
 
 .chip {
-  @apply btn rounded-full border border-base-300 btn-ghost text-xs font-normal normal-case transition-colors btn-sm hover:border-primary hover:text-primary disabled:opacity-40;
+  @apply btn rounded-full border border-base-content/15 btn-ghost text-xs font-normal normal-case transition-colors btn-sm hover:border-primary hover:text-primary disabled:opacity-40;
 }
