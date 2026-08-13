@@ -9,7 +9,7 @@
 }
 
 .titleText {
-  @apply font-display bg-linear-to-r/oklch from-red-600 via-red-500 to-orange-500 bg-clip-text font-bold tracking-tight text-transparent;
+  @apply font-display bg-linear-to-r/oklch from-(--color-nope-from) via-(--color-nope-via) to-(--color-nope-to) bg-clip-text font-bold tracking-tight text-transparent;
 }
 
 .subtitle {

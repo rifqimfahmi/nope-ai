@@ -44,6 +44,10 @@
   --border: 1px;
   --depth: 1;
   --noise: 0;
+
+  --color-nope-from: oklch(50.7% 0.245 27.325);
+  --color-nope-via: oklch(63.7% 0.237 25.331);
+  --color-nope-to: oklch(70.5% 0.213 47.604);
 }
 
 @plugin "daisyui/theme" {
@@ -79,6 +83,10 @@
   --border: 1px;
   --depth: 0;
   --noise: 0;
+
+  --color-nope-from: oklch(52% 0.16 27);
+  --color-nope-via: oklch(58% 0.15 25);
+  --color-nope-to: oklch(64% 0.13 47);
 }
 
 body {

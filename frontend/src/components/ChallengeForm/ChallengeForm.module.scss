@@ -9,7 +9,7 @@
 }
 
 .card {
-  @apply rounded-2xl bg-linear-to-br/oklch from-red-600 via-red-500 to-orange-500 p-[2px] shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-red-500/30;
+  @apply rounded-2xl bg-linear-to-br/oklch from-(--color-nope-from) via-(--color-nope-via) to-(--color-nope-to) p-[2px] shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-(color:--color-nope-via)/30;
 }
 
 .cardInner {
@@ -29,7 +29,7 @@
 }
 
 .submit {
-  @apply btn border-red-600 bg-red-600 text-white transition-transform btn-sm hover:border-red-500 hover:bg-red-500 active:scale-95 sm:btn-md;
+  @apply btn border-(--color-nope-from) bg-(--color-nope-from) text-white transition-transform btn-sm hover:border-(--color-nope-via) hover:bg-(--color-nope-via) active:scale-95 sm:btn-md;
 }
 
 .error {
