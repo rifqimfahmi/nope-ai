@@ -33,11 +33,7 @@ export function ResultView({ input, reply, onAgain }: ResultViewProps) {
             Retry
           </button>
         ) : (
-          <Link
-            className={styles.again}
-            href="/"
-            transitionTypes={["nav-back"]}
-          >
+          <Link className={styles.again} href="/">
             Retry
           </Link>
         )}

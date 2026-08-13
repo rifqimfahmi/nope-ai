@@ -1,7 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ViewTransition } from "react";
 
 import { Header } from "@/components/Header/Header";
 import { ResultView } from "@/components/ResultView/ResultView";
@@ -40,15 +39,9 @@ export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
   return (
     <div className={styles.page}>
       <Header />
-      <ViewTransition
-        enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-        exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-        default="none"
-      >
-        <main className={styles.main}>
-          <ResultView input={challenge.input} reply={challenge.reply} />
-        </main>
-      </ViewTransition>
+      <main className={styles.main}>
+        <ResultView input={challenge.input} reply={challenge.reply} />
+      </main>
     </div>
   );
 }

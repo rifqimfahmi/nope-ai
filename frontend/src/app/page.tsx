@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, addTransitionType, startTransition, ViewTransition } from "react";
+import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useState } from "react";
 
 import { ChallengeForm } from "@/components/ChallengeForm/ChallengeForm";
 import { ErrorAlert } from "@/components/ErrorAlert/ErrorAlert";
@@ -8,7 +9,6 @@ import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
 import { PhaseStatus } from "@/components/PhaseStatus/PhaseStatus";
 import { ResultView } from "@/components/ResultView/ResultView";
-import { StreamingAnswer } from "@/components/StreamingAnswer/StreamingAnswer";
 import { useChallengeStream } from "@/hooks/useChallengeStream";
 import { useCreateHistoryMutation } from "@/hooks/useHistory";
 
@@ -20,19 +20,32 @@ interface CompletedResult {
   reply: string;
 }
 
+const SLIDE_DISTANCE = 24;
+
+const forwardVariants = {
+  initial: { opacity: 0, x: SLIDE_DISTANCE },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -SLIDE_DISTANCE },
+};
+
+const backVariants = {
+  initial: { opacity: 0, x: -SLIDE_DISTANCE },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: SLIDE_DISTANCE },
+};
+
 export default function Home() {
   const [result, setResult] = useState<CompletedResult | null>(null);
+  const [direction, setDirection] = useState<"forward" | "back">("forward");
   const createHistoryMutation = useCreateHistoryMutation();
-  const { status, message, draft, error, start, reset } = useChallengeStream((input, reply) => {
+  const { status, message, error, start, reset } = useChallengeStream((input, reply) => {
     createHistoryMutation.mutate(
       { input, reply },
       {
         onSuccess: (row) => {
           window.history.pushState(null, "", `/nope/${row.id}`);
-          startTransition(() => {
-            addTransitionType("nav-forward");
-            setResult(row);
-          });
+          setDirection("forward");
+          setResult(row);
         },
       },
     );
@@ -41,11 +54,9 @@ export default function Home() {
   useEffect(() => {
     function handlePopState() {
       if (window.location.pathname === "/") {
-        startTransition(() => {
-          addTransitionType("nav-back");
-          setResult(null);
-          reset();
-        });
+        setDirection("back");
+        setResult(null);
+        reset();
       }
     }
     window.addEventListener("popstate", handlePopState);
@@ -54,37 +65,49 @@ export default function Home() {
 
   function handleAgain() {
     window.history.pushState(null, "", "/");
-    startTransition(() => {
-      addTransitionType("nav-back");
-      setResult(null);
-      reset();
-    });
+    setDirection("back");
+    setResult(null);
+    reset();
   }
 
   const streaming = status === "active";
+  const variants = direction === "forward" ? forwardVariants : backVariants;
 
   return (
     <div className={styles.page}>
       <Header />
-      <ViewTransition
-        enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-        exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-        default="none"
-      >
-        <main className={styles.main}>
+      <main className={styles.main}>
+        <AnimatePresence mode="wait" initial={false}>
           {result ? (
-            <ResultView input={result.input} reply={result.reply} onAgain={handleAgain} />
+            <motion.div
+              key="result"
+              className={styles.panel}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
+              <ResultView input={result.input} reply={result.reply} onAgain={handleAgain} />
+            </motion.div>
           ) : (
-            <>
+            <motion.div
+              key="form"
+              className={styles.panel}
+              variants={variants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+            >
               <ChallengeForm onSubmit={start} disabled={streaming} />
               <PhaseStatus status={status} message={message} />
               {error && <ErrorAlert message={error} />}
-              {/* <StreamingAnswer text={draft} streaming={streaming} /> */}
               {/* <HistoryList /> */}
-            </>
+            </motion.div>
           )}
-        </main>
-      </ViewTransition>
+        </AnimatePresence>
+      </main>
     </div>
   );
 }

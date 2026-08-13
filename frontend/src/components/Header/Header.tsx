@@ -4,7 +4,7 @@ import styles from "./Header.module.scss";
 
 export function Header() {
   return (
-    <header className={styles.bar} style={{ viewTransitionName: "site-header" }}>
+    <header className={styles.bar}>
       <div className={styles.themeToggle}>
         <ThemeToggle />
       </div>
