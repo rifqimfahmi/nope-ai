@@ -1,9 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { type ComponentPropsWithoutRef, useState } from "react";
+import ReactMarkdown, { type Components } from "react-markdown";
 
 import styles from "./ResultView.module.scss";
+
+const markdownComponents: Components = {
+  p: "span",
+  a: (props: ComponentPropsWithoutRef<"a">) => (
+    <a {...props} target="_blank" rel="noreferrer noopener" />
+  ),
+};
 
 interface ResultViewProps {
   input: string;
@@ -23,7 +31,9 @@ export function ResultView({ input, reply, onAgain }: ResultViewProps) {
   return (
     <div className={styles.wrapper}>
       <p className={styles.claim}>&ldquo;{input}&rdquo;</p>
-      <p className={styles.reply}>{reply}</p>
+      <p className={styles.reply}>
+        <ReactMarkdown components={markdownComponents}>{reply}</ReactMarkdown>
+      </p>
       <div className={styles.actions}>
         <button className={styles.copy} type="button" onClick={handleCopy}>
           {copied ? "Copied!" : "Copy reply"}

@@ -8,6 +8,10 @@
   @apply flex items-center gap-2 text-3xl sm:text-4xl;
 }
 
+.logo {
+  @apply size-8 sm:size-9;
+}
+
 .titleText {
   @apply font-display bg-linear-to-r/oklch from-(--color-nope-from) via-(--color-nope-via) to-(--color-nope-to) bg-clip-text font-bold tracking-tight text-transparent;
 }
