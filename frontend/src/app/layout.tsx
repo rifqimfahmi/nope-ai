@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Fredoka, Geist, Geist_Mono } from "next/font/google";
+import PlausibleProvider from "next-plausible";
+
+import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
+
 import "./globals.css";
 import { QueryProvider } from "./providers/QueryProvider";
+
+const plausibleSrc = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,8 +26,26 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: "Nope AI",
-  description: "Tell it something you believe. It will disagree.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s — ${SITE_NAME}`,
+  },
+  description: SITE_TAGLINE,
+  keywords: ["AI", "contrarian", "devil's advocate", "argument generator", "opinion"],
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_TAGLINE,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_TAGLINE,
+  },
 };
 
 const THEME_INIT_SCRIPT = `
@@ -45,7 +69,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        <QueryProvider>{children}</QueryProvider>
+        {plausibleSrc ? (
+          <PlausibleProvider src={plausibleSrc}>
+            <QueryProvider>{children}</QueryProvider>
+          </PlausibleProvider>
+        ) : (
+          <QueryProvider>{children}</QueryProvider>
+        )}
       </body>
     </html>
   );

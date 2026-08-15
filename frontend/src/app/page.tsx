@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ChallengeForm } from "@/components/ChallengeForm/ChallengeForm";
 import { ErrorAlert } from "@/components/ErrorAlert/ErrorAlert";
+import { Footer } from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
 import { ResultView } from "@/components/ResultView/ResultView";
@@ -124,6 +125,7 @@ export default function Home() {
           )}
         </AnimatePresence>
       </main>
+      <Footer />
     </div>
   );
 }

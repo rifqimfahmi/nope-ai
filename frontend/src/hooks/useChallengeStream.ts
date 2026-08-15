@@ -1,7 +1,9 @@
 "use client";
 
+import { usePlausible } from "next-plausible";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { type AnalyticsEvents, durationBucket, lengthBucket } from "@/lib/analytics";
 import { streamChallenge } from "@/lib/api/challenge";
 
 export type ChallengeStatus = "idle" | "active" | "done" | "error";
@@ -26,6 +28,8 @@ export function useChallengeStream(
   const [state, setState] = useState<ChallengeStreamState>(INITIAL_STATE);
   const abortRef = useRef<AbortController | null>(null);
   const onCompleteRef = useRef(onComplete);
+  const startedAtRef = useRef(0);
+  const plausible = usePlausible<AnalyticsEvents>();
 
   useEffect(() => {
     onCompleteRef.current = onComplete;
@@ -37,6 +41,7 @@ export function useChallengeStream(
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
+    startedAtRef.current = Date.now();
 
     setState({ status: "active", message: "", draft: "", error: null });
 
@@ -51,23 +56,34 @@ export function useChallengeStream(
             break;
           case "complete":
             setState({ status: "done", message: "", draft: event.content, error: null });
+            plausible("Challenge Completed", {
+              props: {
+                duration_ms_bucket: durationBucket(Date.now() - startedAtRef.current),
+                reply_length_bucket: lengthBucket(event.content.length),
+              },
+            });
             onCompleteRef.current?.(input, event.content, event.cost);
             break;
           case "error":
             setState({ status: "error", message: "", draft: "", error: event.content });
+            plausible("Challenge Errored", { props: { error_type: "stream_error" } });
             break;
         }
       }
     } catch (err) {
-      if (controller.signal.aborted) return;
+      if (controller.signal.aborted) {
+        plausible("Challenge Errored", { props: { error_type: "aborted" } });
+        return;
+      }
       setState({
         status: "error",
         message: "",
         draft: "",
         error: err instanceof Error ? err.message : "Something went wrong.",
       });
+      plausible("Challenge Errored", { props: { error_type: "network_error" } });
     }
-  }, []);
+  }, [plausible]);
 
   const reset = useCallback(() => {
     abortRef.current?.abort();

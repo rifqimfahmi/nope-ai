@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Footer } from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
 import { ResultView } from "@/components/ResultView/ResultView";
 import { db } from "@/db";
@@ -23,8 +24,22 @@ export async function generateMetadata({
   const { id } = await params;
   const challenge = await getChallenge(id);
 
+  if (!challenge) {
+    return { title: "Result — Nope AI" };
+  }
+
+  const title = `"${challenge.input}"`;
+  const description = challenge.reply;
+
   return {
-    title: challenge ? `"${challenge.input}" — Nope AI` : "Result — Nope AI",
+    title,
+    description,
+    // Individual results are unmoderated user-submitted text - keep them out
+    // of search results, but still let link previews (Slack/Discord/Twitter)
+    // read the OG tags below.
+    robots: { index: false, follow: true },
+    openGraph: { title, description },
+    twitter: { card: "summary_large_image", title, description },
   };
 }
 
@@ -47,6 +62,7 @@ export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
           reactions={challenge.reactions}
         />
       </main>
+      <Footer />
     </div>
   );
 }

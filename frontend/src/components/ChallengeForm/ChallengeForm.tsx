@@ -1,9 +1,11 @@
 "use client";
 
+import { usePlausible } from "next-plausible";
 import { useEffect, useState, type SubmitEvent } from "react";
 
 import { PhaseStatus } from "@/components/PhaseStatus/PhaseStatus";
 import type { ChallengeStatus } from "@/hooks/useChallengeStream";
+import { type AnalyticsEvents, lengthBucket } from "@/lib/analytics";
 import { challengeRequestSchema } from "@/lib/schemas";
 
 import styles from "./ChallengeForm.module.scss";
@@ -32,6 +34,7 @@ export function ChallengeForm({ onSubmit, disabled, status, statusMessage }: Cha
   const [value, setValue] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
+  const plausible = usePlausible<AnalyticsEvents>();
 
   useEffect(() => {
     if (value) return;
@@ -45,14 +48,24 @@ export function ChallengeForm({ onSubmit, disabled, status, statusMessage }: Cha
     event.preventDefault();
     const parsed = challengeRequestSchema.safeParse({ input: value });
     if (!parsed.success) {
+      plausible("Challenge Validation Failed", {
+        props: { reason: parsed.error.issues[0]?.code ?? "unknown" },
+      });
       setValidationError(parsed.error.issues[0]?.message ?? "Invalid input.");
       return;
     }
     setValidationError(null);
+    plausible("Challenge Submitted", {
+      props: {
+        input_length_bucket: lengthBucket(parsed.data.input.length),
+        used_example: EXAMPLES.includes(parsed.data.input),
+      },
+    });
     onSubmit(parsed.data.input);
   }
 
   function handleExampleClick(example: string) {
+    plausible("Example Clicked", { props: { example_index: EXAMPLES.indexOf(example) } });
     setValue(example);
     setValidationError(null);
   }

@@ -3,6 +3,7 @@
 import { toPng } from "html-to-image";
 import { Download, Share2, ThumbsUp } from "lucide-react";
 import Link from "next/link";
+import { usePlausible } from "next-plausible";
 import {
   type ComponentPropsWithoutRef,
   useCallback,
@@ -13,6 +14,7 @@ import {
 import ReactMarkdown, { type Components } from "react-markdown";
 
 import { useReactMutation } from "@/hooks/useHistory";
+import type { AnalyticsEvents } from "@/lib/analytics";
 
 import styles from "./ResultView.module.scss";
 
@@ -63,9 +65,11 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
   const reacted = useReacted(id);
   const cardRef = useRef<HTMLDivElement>(null);
   const reactMutation = useReactMutation();
+  const plausible = usePlausible<AnalyticsEvents>();
 
   async function handleCopy() {
     await navigator.clipboard.writeText(reply);
+    plausible("Reply Copied");
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   }
@@ -76,6 +80,7 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
     if (navigator.share) {
       try {
         await navigator.share({ title: "Nope AI", text: input, url });
+        plausible("Result Link Shared", { props: { via: "native_share" } });
       } catch {
         // User dismissed the share sheet - nothing to do.
       }
@@ -83,8 +88,14 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
     }
 
     await navigator.clipboard.writeText(url);
+    plausible("Result Link Shared", { props: { via: "copy_link" } });
     setShared(true);
     setTimeout(() => setShared(false), 1500);
+  }
+
+  function handleRetry() {
+    plausible("Challenge Retried", { props: { from: onAgain ? "home" : "shared_result" } });
+    onAgain?.();
   }
 
   function handleReact() {
@@ -152,11 +163,11 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
           {downloading ? "Saving…" : "Save image"}
         </button>
         {onAgain ? (
-          <button className={styles.again} type="button" onClick={onAgain}>
+          <button className={styles.again} type="button" onClick={handleRetry}>
             Retry
           </button>
         ) : (
-          <Link className={styles.again} href="/">
+          <Link className={styles.again} href="/" onClick={handleRetry}>
             Retry
           </Link>
         )}
