@@ -7,7 +7,6 @@ import { ChallengeForm } from "@/components/ChallengeForm/ChallengeForm";
 import { ErrorAlert } from "@/components/ErrorAlert/ErrorAlert";
 import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
-import { PhaseStatus } from "@/components/PhaseStatus/PhaseStatus";
 import { ResultView } from "@/components/ResultView/ResultView";
 import { useChallengeStream } from "@/hooks/useChallengeStream";
 import { useCreateHistoryMutation } from "@/hooks/useHistory";
@@ -18,6 +17,7 @@ interface CompletedResult {
   id: number;
   input: string;
   reply: string;
+  reactions: number;
 }
 
 const SLIDE_DISTANCE = 24;
@@ -38,9 +38,9 @@ export default function Home() {
   const [result, setResult] = useState<CompletedResult | null>(null);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
   const createHistoryMutation = useCreateHistoryMutation();
-  const { status, message, error, start, reset } = useChallengeStream((input, reply) => {
+  const { status, message, error, start, reset } = useChallengeStream((input, reply, cost) => {
     createHistoryMutation.mutate(
-      { input, reply },
+      { input, reply, cost },
       {
         onSuccess: (row) => {
           window.history.pushState(null, "", `/nope/${row.id}`);
@@ -50,6 +50,12 @@ export default function Home() {
       },
     );
   });
+
+  useEffect(() => {
+    if (result) {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }, [result]);
 
   useEffect(() => {
     function handlePopState() {
@@ -88,7 +94,13 @@ export default function Home() {
               exit="exit"
               transition={{ duration: 0.25, ease: "easeInOut" }}
             >
-              <ResultView input={result.input} reply={result.reply} onAgain={handleAgain} />
+              <ResultView
+                id={result.id}
+                input={result.input}
+                reply={result.reply}
+                reactions={result.reactions}
+                onAgain={handleAgain}
+              />
             </motion.div>
           ) : (
             <motion.div
@@ -100,8 +112,12 @@ export default function Home() {
               exit="exit"
               transition={{ duration: 0.25, ease: "easeInOut" }}
             >
-              <ChallengeForm onSubmit={start} disabled={streaming} />
-              <PhaseStatus status={status} message={message} />
+              <ChallengeForm
+                onSubmit={start}
+                disabled={streaming}
+                status={status}
+                statusMessage={message}
+              />
               {error && <ErrorAlert message={error} />}
               {/* <HistoryList /> */}
             </motion.div>

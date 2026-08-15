@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type SubmitEvent } from "react";
 
+import { PhaseStatus } from "@/components/PhaseStatus/PhaseStatus";
+import type { ChallengeStatus } from "@/hooks/useChallengeStream";
 import { challengeRequestSchema } from "@/lib/schemas";
 
 import styles from "./ChallengeForm.module.scss";
@@ -22,9 +24,11 @@ const PLACEHOLDER_ROTATE_MS = 2800;
 interface ChallengeFormProps {
   onSubmit: (input: string) => void;
   disabled: boolean;
+  status: ChallengeStatus;
+  statusMessage: string;
 }
 
-export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
+export function ChallengeForm({ onSubmit, disabled, status, statusMessage }: ChallengeFormProps) {
   const [value, setValue] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -87,20 +91,24 @@ export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
 
       {validationError && <p className={styles.error}>{validationError}</p>}
 
-      <div className={styles.examples}>
-        <span className={styles.examplesLabel}>Try one:</span>
-        {EXAMPLES.map((example) => (
-          <button
-            key={example}
-            type="button"
-            className={styles.chip}
-            onClick={() => handleExampleClick(example)}
-            disabled={disabled}
-          >
-            {example}
-          </button>
-        ))}
-      </div>
+      <PhaseStatus status={status} message={statusMessage} />
+
+      {!disabled && (
+        <div className={styles.examples}>
+          <span className={styles.examplesLabel}>Try one:</span>
+          {EXAMPLES.map((example) => (
+            <button
+              key={example}
+              type="button"
+              className={styles.chip}
+              onClick={() => handleExampleClick(example)}
+              disabled={disabled}
+            >
+              {example}
+            </button>
+          ))}
+        </div>
+      )}
     </form>
   );
 }

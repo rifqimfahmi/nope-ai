@@ -1,0 +1,1 @@
+ALTER TABLE "challenges" ADD COLUMN "cost" double precision;

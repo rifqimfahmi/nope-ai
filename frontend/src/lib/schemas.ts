@@ -9,7 +9,12 @@ export type ChallengeRequest = z.infer<typeof challengeRequestSchema>;
 export const streamEventSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("phase"), content: z.string(), timestamp: z.number() }),
   z.object({ type: z.literal("token"), content: z.string(), timestamp: z.number() }),
-  z.object({ type: z.literal("complete"), content: z.string(), timestamp: z.number() }),
+  z.object({
+    type: z.literal("complete"),
+    content: z.string(),
+    timestamp: z.number(),
+    cost: z.number().optional(),
+  }),
   z.object({ type: z.literal("error"), content: z.string(), timestamp: z.number() }),
 ]);
 
@@ -19,6 +24,7 @@ export const historyItemSchema = z.object({
   id: z.number(),
   input: z.string(),
   reply: z.string(),
+  reactions: z.number(),
   createdAt: z.string(),
 });
 
@@ -27,6 +33,7 @@ export type HistoryItem = z.infer<typeof historyItemSchema>;
 export const createHistoryItemSchema = z.object({
   input: z.string().trim().min(1),
   reply: z.string().trim().min(1),
+  cost: z.number().nonnegative().optional(),
 });
 
 export type CreateHistoryItem = z.infer<typeof createHistoryItemSchema>;

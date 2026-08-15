@@ -22,3 +22,8 @@ export async function deleteHistoryItem(id: number): Promise<void> {
 export async function clearHistory(): Promise<void> {
   await http.delete("/history");
 }
+
+export async function reactToHistoryItem(id: number): Promise<HistoryItem> {
+  const { data } = await http.post(`/history/${id}/react`);
+  return historyItemSchema.parse(data);
+}

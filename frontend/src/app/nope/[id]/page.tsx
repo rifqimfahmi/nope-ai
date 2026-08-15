@@ -40,7 +40,12 @@ export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
     <div className={styles.page}>
       <Header />
       <main className={styles.main}>
-        <ResultView input={challenge.input} reply={challenge.reply} />
+        <ResultView
+          id={challenge.id}
+          input={challenge.input}
+          reply={challenge.reply}
+          reactions={challenge.reactions}
+        />
       </main>
     </div>
   );

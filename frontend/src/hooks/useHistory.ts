@@ -5,6 +5,7 @@ import {
   createHistoryItem,
   deleteHistoryItem,
   fetchHistory,
+  reactToHistoryItem,
 } from "@/lib/api/history";
 
 const HISTORY_QUERY_KEY = ["history"] as const;
@@ -36,6 +37,14 @@ export function useClearHistoryMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: clearHistory,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
+  });
+}
+
+export function useReactMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: reactToHistoryItem,
     onSuccess: () => queryClient.invalidateQueries({ queryKey: HISTORY_QUERY_KEY }),
   });
 }

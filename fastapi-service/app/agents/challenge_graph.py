@@ -12,6 +12,25 @@ from app.prompts import CONTRARIAN_PROMPTS, FEEDBACK_REVISION_PROMPT, REVIEWER_S
 
 HISTORY_WINDOW = 3
 
+# USD per million tokens (input, output). Keep in sync with settings.agent_model /
+# settings.review_model — Anthropic doesn't expose pricing via the API.
+MODEL_PRICING: dict[str, tuple[float, float]] = {
+    "claude-haiku-4-5-20251001": (1.00, 5.00),
+    "claude-sonnet-4-6": (3.00, 15.00),
+}
+
+
+def _call_cost(model_id: str, usage: dict | None) -> float:
+    if not usage:
+        return 0.0
+    pricing = MODEL_PRICING.get(model_id)
+    if not pricing:
+        return 0.0
+    input_price, output_price = pricing
+    input_tokens = usage.get("input_tokens", 0)
+    output_tokens = usage.get("output_tokens", 0)
+    return (input_tokens / 1_000_000) * input_price + (output_tokens / 1_000_000) * output_price
+
 
 class ChallengeTurn(TypedDict):
     draft: str
@@ -25,6 +44,7 @@ class ChallengeState(TypedDict):
     iteration: int
     approved: bool
     history: list[ChallengeTurn]
+    cost: float
 
 
 class MessageEvent(TypedDict):
@@ -41,6 +61,7 @@ class UpdateEvent(ChallengeState):
 class CompleteEvent(TypedDict):
     type: Literal["complete"]
     draft: str
+    cost: float
 
 
 StreamEvent = MessageEvent | UpdateEvent | CompleteEvent
@@ -60,7 +81,8 @@ async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeSta
     full = chunks[0]
     for chunk in chunks[1:]:
         full += chunk
-    return {**state, "draft": full.text}
+    cost = _call_cost(model.model, full.usage_metadata)
+    return {**state, "draft": full.text, "cost": state["cost"] + cost}
 
 
 async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
@@ -75,6 +97,7 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
     full = chunks[0]
     for chunk in chunks[1:]:
         full += chunk
+    cost = _call_cost(model.model, full.usage_metadata)
     verdict = full.text.strip()
     approved = verdict.upper().startswith("LGTM")
     history = state["history"]
@@ -86,6 +109,7 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
         "feedback": None if approved else verdict,
         "iteration": state["iteration"] + 1,
         "history": history,
+        "cost": state["cost"] + cost,
     }
 
 
@@ -137,9 +161,11 @@ async def run_challenge_stream(input: str, settings: Settings) -> AsyncIterator[
         "iteration": 0,
         "approved": False,
         "history": [],
+        "cost": 0.0,
     }
 
     final_draft = initial_state["draft"]
+    final_cost = initial_state["cost"]
     async for part in app.astream(initial_state, stream_mode=["updates", "messages"], version="v2"):
         if part["type"] == "messages":
             message_chunk, metadata = part["data"]
@@ -157,13 +183,14 @@ async def run_challenge_stream(input: str, settings: Settings) -> AsyncIterator[
                 if node_name in ("generate", "review"):
                     state = cast(ChallengeState, raw_state)
                     update_event: UpdateEvent = {
-                        "node": node_name, 
-                        "type": "updates", 
+                        "node": node_name,
+                        "type": "updates",
                         **state
                     }
                     yield update_event
+                    final_cost = state["cost"]
                     if node_name == "review":
                         final_draft = state["draft"]
 
-    complete_event: CompleteEvent = {"type": "complete", "draft": final_draft}
+    complete_event: CompleteEvent = {"type": "complete", "draft": final_draft, "cost": final_cost}
     yield complete_event

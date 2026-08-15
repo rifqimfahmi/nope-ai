@@ -1,0 +1,1 @@
+ALTER TABLE "challenges" ADD COLUMN "reactions" integer DEFAULT 0 NOT NULL;

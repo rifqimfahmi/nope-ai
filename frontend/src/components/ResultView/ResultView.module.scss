@@ -4,6 +4,10 @@
   @apply flex flex-col gap-4;
 }
 
+.card {
+  @apply flex flex-col gap-4 rounded-2xl bg-base-100 p-6;
+}
+
 .claim {
   @apply text-sm font-medium text-base-content/60 italic;
 }
@@ -12,12 +16,24 @@
   @apply text-2xl font-semibold leading-relaxed whitespace-pre-wrap;
 }
 
+.watermark {
+  @apply text-xs font-medium tracking-wide text-base-content/30 uppercase;
+}
+
 .actions {
   @apply mt-2 flex flex-wrap items-center gap-3;
 }
 
-.copy {
-  @apply btn btn-outline btn-sm;
+.actionButton {
+  @apply btn btn-outline btn-sm gap-1.5;
+}
+
+.reactButton {
+  @apply btn btn-outline btn-sm gap-1.5;
+
+  &[aria-pressed="true"] {
+    @apply btn-primary;
+  }
 }
 
 .again {

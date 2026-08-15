@@ -1,17 +1,21 @@
 @reference "../../app/globals.css";
 
 .row {
-  @apply flex items-center gap-2;
+  @apply flex min-h-7 items-center gap-2;
 }
 
 .spinner {
-  @apply loading loading-spinner loading-sm text-primary;
+  @apply loading loading-spinner loading-sm text-(--color-nope-via);
 }
 
 .label {
-  @apply text-sm font-medium text-base-content/70;
+  @apply bg-gradient-to-r from-(--color-nope-from) via-(--color-nope-via) to-(--color-nope-to) bg-clip-text text-base font-semibold text-transparent sm:text-lg;
+}
+
+.doneLabel {
+  @apply text-base font-semibold text-success sm:text-lg;
 }
 
 .errorLabel {
-  @apply text-sm font-medium text-error;
+  @apply text-base font-semibold text-error sm:text-lg;
 }

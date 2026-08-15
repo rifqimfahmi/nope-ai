@@ -15,7 +15,7 @@ from app.schemas import ChallengeRequest
 router = APIRouter()
 tracer = trace.get_tracer(__name__)
 
-MIN_PHASE_DISPLAY_SECONDS = 0.9
+MIN_PHASE_DISPLAY_SECONDS = 1.5
 
 GENERATING_LINES = [
     "Preparing a reason why you're wrong...",
@@ -55,13 +55,14 @@ def _now_ms() -> int:
     return int(time.time() * 1000)
 
 
-def _sse(event_type: str, content: str) -> dict[str, str]:
+def _sse(event_type: str, content: str, **extra: object) -> dict[str, str]:
     return {
         "data": json.dumps(
             {
                 "type": event_type,
                 "content": content,
                 "timestamp": _now_ms(),
+                **extra,
             }
         )
     }
@@ -93,7 +94,7 @@ async def _challenge_events(user_input: str) -> AsyncIterator[dict[str, str]]:
                 # if update["type"] == "messages" and update["node"] == "generate":
                 #     yield _sse("token", update["content"])
                 if update["type"] == "complete":
-                    yield _sse("complete", update["draft"])
+                    yield _sse("complete", update["draft"], cost=update["cost"])
                 elif update["type"] == "updates":
                     if update["node"] == "generate":
                         yield _phase(REVIEWING_LINES)
