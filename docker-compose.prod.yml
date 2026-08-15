@@ -29,6 +29,7 @@
 services:
   postgres-prod:
     image: postgres:16-alpine
+    restart: unless-stopped
     environment:
       - POSTGRES_USER=${POSTGRES_USER:?POSTGRES_USER must be set in .env}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
@@ -45,16 +46,18 @@ services:
     # 5433 for local psql/GUI access.
 
   phoenix-prod:
-    image: arizephoenix/phoenix:latest
+    image: arizephoenix/phoenix:20.2.1
+    restart: unless-stopped
     ports:
-      - "6008:6006" # Phoenix UI + OTLP HTTP collector (dev uses 6007)
-      - "4319:4317" # OTLP gRPC collector (dev uses 4318)
+      - "127.0.0.1:6008:6006" # Phoenix UI + OTLP HTTP collector (dev uses 6007) - no auth, keep off the public interface
+      - "127.0.0.1:4319:4317" # OTLP gRPC collector (dev uses 4318)
     volumes:
       - phoenix-prod-data:/mnt/data
 
   fastapi:
     build:
       target: runner
+    restart: unless-stopped
     environment:
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix-prod:4317
     # The dev stage's bind mount + venv volume don't apply to the
@@ -67,6 +70,7 @@ services:
   frontend:
     build:
       target: runner
+    restart: unless-stopped
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
     # The dev stage's bind mount + anti-shadow volumes don't apply to the
@@ -83,7 +87,7 @@ services:
   # (added through the Metabase UI on first login, same as dev - see the base
   # file's `metabase` service). Kept behind the same `tools` profile as dev.
   metabase-prod:
-    image: metabase/metabase:latest
+    image: metabase/metabase:v0.63.13
     container_name: nope-ai-2_metabase_prod
     restart: unless-stopped
     profiles:
@@ -96,6 +100,36 @@ services:
       - "127.0.0.1:3005:3000" # dev uses 3004
     depends_on:
       - postgres-prod
+
+  # Pangolin tunnel into this host. Opt-in like metabase-prod - start with
+  # `--profile tunnel up -d newt`.
+  newt:
+    image: fosrl/newt
+    container_name: nope-ai-2_newt
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    environment:
+      - PANGOLIN_ENDPOINT=https://appsto.me
+      - NEWT_ID=gx3zj1oi1g1u7gh
+      - NEWT_SECRET=${NEWT_SECRET:?NEWT_SECRET required}
+
+  # Restarts the newt container if it drops off Pangolin - watches it via the
+  # host's Docker socket, so it can act on `newt` without being in its network.
+  newt-monitor:
+    image: ghcr.io/rifqimfahmi/newt-monitor:1.0.3
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - MONITOR_URL=${MONITOR_URL:?MONITOR_URL env is required}
+      - CONTAINER_NAME=nope-ai-2_newt
+      - CHECK_INTERVAL=30
+      - LOG_LEVEL=INFO
+    depends_on:
+      - newt
 
 volumes:
   postgres-prod-data:
