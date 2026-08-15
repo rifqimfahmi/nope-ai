@@ -11,6 +11,7 @@ from app.prompts import CONTRARIAN_PROMPTS, FEEDBACK_REVISION_PROMPT, REVIEWER_S
 
 
 HISTORY_WINDOW = 3
+EM_DASH_FEEDBACK = "Drop the em dash, that crutch is banned on your watch."
 
 # USD per million tokens (input, output). Keep in sync with settings.agent_model /
 # settings.review_model — Anthropic doesn't expose pricing via the API.
@@ -86,6 +87,15 @@ async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeSta
 
 
 async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
+    if "—" in state["draft"]:
+        history = [*state["history"], {"draft": state["draft"], "feedback": EM_DASH_FEEDBACK}][-HISTORY_WINDOW:]
+        return {
+            **state,
+            "approved": False,
+            "feedback": EM_DASH_FEEDBACK,
+            "iteration": state["iteration"] + 1,
+            "history": history,
+        }
     messages = [
         {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
         {
