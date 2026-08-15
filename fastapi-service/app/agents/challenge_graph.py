@@ -99,7 +99,7 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
         full += chunk
     cost = _call_cost(model.model, full.usage_metadata)
     verdict = full.text.strip()
-    approved = verdict.upper().startswith("LGTM")
+    approved = verdict.upper() == "LGTM"
     history = state["history"]
     if not approved:
         history = [*history, {"draft": state["draft"], "feedback": verdict}][-HISTORY_WINDOW:]
