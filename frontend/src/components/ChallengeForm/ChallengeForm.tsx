@@ -7,11 +7,13 @@ import { challengeRequestSchema } from "@/lib/schemas";
 import styles from "./ChallengeForm.module.scss";
 
 const EXAMPLES = [
-  "Water is wet.",
-  "The earth is round.",
+  "Pineapple belongs on pizza.",
+  "Mornings are the best part of the day.",
   "Coffee is good for you.",
   "Cats are better than dogs.",
   "Money can't buy happiness.",
+  "Honesty is always the best policy.",
+  "Hard work guarantees success.",
 ];
 
 const MAX_LENGTH = 500;
