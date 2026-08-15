@@ -72,6 +72,21 @@ REVIEWER_SYSTEM_PROMPT = textwrap.dedent("""
     Otherwise respond with one short, cutting sentence telling it exactly what to fix, and nothing else.
 """).strip()
 
+REVIEWER_FEWSHOT_MESSAGES: list[dict[str, str]] = [
+    {
+        "role": "user",
+        "content": (
+            'User\'s fact: "Pineapple belongs on pizza."\n'
+            'Chatbot\'s reply: "Pineapple actually tastes like regret on a slice, pepperoni pizza '
+            'is the only one brave enough to keep things simple."'
+        ),
+    },
+    {
+        "role": "assistant",
+        "content": "LGTM",
+    },
+]
+
 FEEDBACK_REVISION_PROMPT = (
     'A reviewer said: "{feedback}". Write a better one-sentence reply. '
     "Reply with ONLY the new sentence itself - no acknowledgement, preamble, "

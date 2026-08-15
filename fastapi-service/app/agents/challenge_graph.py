@@ -7,7 +7,12 @@ from langgraph.graph import END, START, StateGraph
 from pydantic import SecretStr
 
 from app.config import Settings
-from app.prompts import CONTRARIAN_PROMPTS, FEEDBACK_REVISION_PROMPT, REVIEWER_SYSTEM_PROMPT
+from app.prompts import (
+    CONTRARIAN_PROMPTS,
+    FEEDBACK_REVISION_PROMPT,
+    REVIEWER_FEWSHOT_MESSAGES,
+    REVIEWER_SYSTEM_PROMPT,
+)
 
 
 HISTORY_WINDOW = 3
@@ -98,6 +103,7 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
         }
     messages = [
         {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
+        *REVIEWER_FEWSHOT_MESSAGES,
         {
             "role": "user",
             "content": f'User\'s fact: "{state["input"]}"\nChatbot\'s reply: "{state["draft"]}"',
