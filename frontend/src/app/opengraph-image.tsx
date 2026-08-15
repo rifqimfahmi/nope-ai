@@ -1,5 +1,6 @@
 import { ImageResponse } from "next/og";
 
+import { NopeMark } from "@/lib/brand";
 import { SITE_NAME, SITE_TAGLINE } from "@/lib/site";
 
 export const alt = `${SITE_NAME} — ${SITE_TAGLINE}`;
@@ -21,6 +22,9 @@ export default function Image() {
           fontFamily: "sans-serif",
         }}
       >
+        <div style={{ display: "flex", marginBottom: 24 }}>
+          <NopeMark size={112} fill="#ffffff" />
+        </div>
         <div
           style={{
             display: "flex",

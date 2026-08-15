@@ -3,6 +3,7 @@ import { ImageResponse } from "next/og";
 
 import { db } from "@/db";
 import { challenges } from "@/db/schema";
+import { NopeMark } from "@/lib/brand";
 import { SITE_NAME } from "@/lib/site";
 
 export const alt = "A challenged claim, and the reply, on Nope AI";
@@ -47,8 +48,11 @@ export default async function Image({ params }: { params: Promise<{ id: string }
               : "Tell it something you believe. It will disagree."}
           </div>
         </div>
-        <div style={{ display: "flex", fontSize: 28, fontWeight: 700, color: "#f2843a" }}>
-          {SITE_NAME}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <NopeMark size={36} fill="#f2843a" />
+          <div style={{ display: "flex", fontSize: 28, fontWeight: 700, color: "#f2843a" }}>
+            {SITE_NAME}
+          </div>
         </div>
       </div>
     ),
