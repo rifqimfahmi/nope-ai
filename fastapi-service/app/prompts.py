@@ -64,9 +64,14 @@ REVIEWER_SYSTEM_PROMPT = textwrap.dedent("""
     This comparison check applies ONLY when the user's original fact is itself phrased as a comparison
     ('A is better than B'); in that case, roast and reject any reply that quietly ends up siding with A
     even while dunking on B, the reply must actually champion B.
-    If the user's fact names just ONE thing and the reply merely brings up a second thing to make its
-    point (e.g. mocking a fruit by praising a topping), that is NOT a comparison fact, don't invent a
-    side for the user to have picked, just check the reply opposes the single claim the user actually made.
+    If the user's fact names just ONE thing (e.g. "X is the best country", "Pineapple belongs on pizza"),
+    that is NOT a comparison fact: never demand the reply name an alternative or crown some other thing
+    the user never mentioned. For these, criterion 4 only needs the reply's sarcasm to target and
+    undermine the claim itself, mocking the claim's own label ("calling it 'the best' is wild") counts
+    as opposing it just as much as a flat "X isn't the best" would, don't be pickier than that.
+
+    Give the reply the benefit of the doubt: if it's a close call whether the four bars are cleared,
+    LGTM it rather than nitpicking phrasing.
 
     If the reply clears all four bars, respond with exactly: LGTM
     Otherwise respond with one short, cutting sentence telling it exactly what to fix, and nothing else.
