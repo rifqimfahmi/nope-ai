@@ -1,7 +1,7 @@
 "use client";
 
 import { toPng } from "html-to-image";
-import { Download, Share2, ThumbsUp } from "lucide-react";
+import { Download, Laugh, Share2 } from "lucide-react";
 import Link from "next/link";
 import { usePlausible } from "next-plausible";
 import {
@@ -58,7 +58,6 @@ function useReacted(id: number) {
 }
 
 export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewProps) {
-  const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [reactionCount, setReactionCount] = useState(reactions);
@@ -66,13 +65,6 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
   const cardRef = useRef<HTMLDivElement>(null);
   const reactMutation = useReactMutation();
   const plausible = usePlausible<AnalyticsEvents>();
-
-  async function handleCopy() {
-    await navigator.clipboard.writeText(reply);
-    plausible("Reply Copied");
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
 
   async function handleShare() {
     const url = `${window.location.origin}/nope/${id}`;
@@ -136,13 +128,6 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
         <span className={styles.watermark}>nope-ai</span>
       </div>
       <div className={styles.actions}>
-        <button className={styles.actionButton} type="button" onClick={handleCopy}>
-          {copied ? "Copied!" : "Copy reply"}
-        </button>
-        <button className={styles.actionButton} type="button" onClick={handleShare}>
-          <Share2 size={16} />
-          {shared ? "Link copied!" : "Share"}
-        </button>
         <button
           className={styles.reactButton}
           type="button"
@@ -150,8 +135,12 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
           disabled={reacted}
           aria-pressed={reacted}
         >
-          <ThumbsUp size={16} />
+          <Laugh size={16} />
           +1 Lol{reactionCount > 0 ? ` (${reactionCount})` : ""}
+        </button>
+        <button className={styles.actionButton} type="button" onClick={handleShare}>
+          <Share2 size={16} />
+          {shared ? "Link copied!" : "Share"}
         </button>
         <button
           className={styles.actionButton}

@@ -22,7 +22,6 @@ export type AnalyticsEvents = {
   "Challenge Validation Failed": { reason: string };
   "Challenge Completed": { duration_ms_bucket: DurationBucket; reply_length_bucket: LengthBucket };
   "Challenge Errored": { error_type: "stream_error" | "network_error" | "aborted" };
-  "Reply Copied": never;
   "Challenge Retried": { from: "home" | "shared_result" };
   "Result Link Shared": { via: "native_share" | "copy_link" };
   "Shared Result Not Found": never;

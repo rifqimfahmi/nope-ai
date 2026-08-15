@@ -33,6 +33,12 @@
 
   &[aria-pressed="true"] {
     @apply btn-primary;
+
+    &:disabled {
+      background-color: var(--color-primary) !important;
+      border-color: var(--color-primary) !important;
+      color: var(--color-primary-content) !important;
+    }
   }
 }
 

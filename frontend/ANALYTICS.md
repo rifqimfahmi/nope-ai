@@ -36,7 +36,7 @@ This is the funnel that matters most: **land → write a claim → submit → se
 | `Challenge Errored` | `error` event and the `catch` block in `useChallengeStream.start` (`src/hooks/useChallengeStream.ts:54,59`) | `error_type` (`stream_error` vs `network_error`/`aborted`) | Directly actionable reliability signal. If this trends up after a deploy, you know immediately. |
 | `Challenge Abandoned` | in the `useEffect` cleanup / `reset()` path, when `status === "active"` and the user navigates away or hits "Retry" mid-stream | — | Distinguishes "the model was too slow and they gave up" from a clean error. This is the metric most tools never track and most wish they had. |
 
-**Funnel to build in Plausible:** `Challenge Submitted` → `Challenge Completed` → (`Reply Copied` or `Challenge Retried` or `Result Shared`). Drop-off between step 1 and 2 is your reliability/latency signal; drop-off after step 2 tells you if the output is actually good enough to act on.
+**Funnel to build in Plausible:** `Challenge Submitted` → `Challenge Completed` → (`Result Link Shared` or `Challenge Retried`). Drop-off between step 1 and 2 is your reliability/latency signal; drop-off after step 2 tells you if the output is actually good enough to act on.
 
 ### 2. Result actions
 
@@ -44,7 +44,6 @@ Once a reply exists (`ResultView`, `src/components/ResultView/ResultView.tsx`), 
 
 | Event | Trigger | Props | Why |
 |---|---|---|---|
-| `Reply Copied` | `ResultView.handleCopy` (`:19`) | — | Best proxy you have for "the answer was good enough to use elsewhere." |
 | `Challenge Retried` | the "Retry" button — both the `onAgain` callback path (home page) and the plain `<Link href="/">` path (shared-result page) | `from` (`"home"` / `"shared_result"`) | High retry rate from `home` after completion suggests the first reply often isn't satisfying. High retry from `shared_result` tells you visitors from shared links engage, not just bounce. |
 | `Result Link Shared` | there's currently no explicit share button — see note below | `via` (`"copy_link"` if you add one) | See recommendation below; right now the only way a `/nope/[id]` URL gets shared is manual URL copy, which you can't track. |
 
@@ -81,7 +80,7 @@ Until it's re-enabled, none of this is worth instrumenting — don't track dead 
 
 ## Funnels & goals to configure in the Plausible dashboard
 
-1. **Core loop:** `Challenge Submitted` → `Challenge Completed` → `Reply Copied` *or* `Challenge Retried`.
+1. **Core loop:** `Challenge Submitted` → `Challenge Completed` → `Result Link Shared` *or* `Challenge Retried`.
 2. **Reliability:** `Challenge Submitted` → `Challenge Errored` / `Challenge Abandoned`, watched as a rate, not raw count — spikes after a deploy are your canary for the SSE endpoint (`src/app/api/challenge-me/route.ts`).
 3. **Virality:** goal on `/nope/**` pageviews, segmented by referrer (Plausible does this automatically) — tells you where shared links actually get clicked (Twitter/X, Slack, iMessage previews, etc.).
 4. **Onboarding friction:** `Example Clicked` vs. `Challenge Submitted` with `used_example: false` — ratio tells you if the blank-textarea state is intimidating people into leaning on examples.
