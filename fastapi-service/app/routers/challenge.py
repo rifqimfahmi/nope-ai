@@ -15,24 +15,39 @@ from app.schemas import ChallengeRequest
 router = APIRouter()
 tracer = trace.get_tracer(__name__)
 
-MIN_PHASE_DISPLAY_SECONDS = 0.7
+MIN_PHASE_DISPLAY_SECONDS = 0.9
 
 GENERATING_LINES = [
     "Preparing a reason why you're wrong...",
     "Cooking up some brutal honesty...",
     "Loading maximum sass...",
+    "Sharpening the knives...",
+    "Consulting my inner asshole...",
+    "Summoning zero empathy...",
+    "Calculating exactly how wrong you are...",
+    "Drafting your reality check...",
 ]
 
 REGENERATING_LINES = [
     "Dealing with another nonsense...",
     "That wasn't harsh enough. Trying again...",
     "Back to the drawing board, but meaner...",
+    "Nope, too nice. Redoing...",
+    "Recalibrating the savagery...",
+    "You really wanted worse? Bet...",
+    "Turning the mean dial up...",
+    "Scrapping that, going feral...",
 ]
 
 REVIEWING_LINES = [
     "Fact-checking the savagery...",
     "Making sure this really stings...",
     "Running quality control on the roast...",
+    "Checking if this crosses a line (it does)...",
+    "Peer-reviewing the burn...",
+    "Taste-testing for maximum sting...",
+    "Confirming this will ruin your day...",
+    "Final polish on the roast...",
 ]
 
 

@@ -9,11 +9,11 @@
 }
 
 .card {
-  @apply rounded-2xl bg-linear-to-br/oklch from-(--color-nope-from) via-(--color-nope-via) to-(--color-nope-to) p-[2px] shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-(color:--color-nope-via)/30;
-}
-
-.cardInner {
-  @apply flex flex-col gap-2 rounded-[14px] bg-base-200 p-4;
+  @apply flex flex-col gap-2 rounded-2xl border-2 border-transparent p-4 shadow-sm transition-shadow duration-300 focus-within:shadow-xl focus-within:shadow-(color:--color-nope-via)/30;
+  background:
+    linear-gradient(var(--color-base-100), var(--color-base-100)) padding-box,
+    linear-gradient(to bottom right in oklch, var(--color-nope-from), var(--color-nope-via), var(--color-nope-to))
+      border-box;
 }
 
 .textarea {

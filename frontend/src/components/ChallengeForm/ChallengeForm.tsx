@@ -60,30 +60,28 @@ export function ChallengeForm({ onSubmit, disabled }: ChallengeFormProps) {
       </label>
 
       <div className={styles.card}>
-        <div className={styles.cardInner}>
-          <textarea
-            id="challenge-input"
-            className={styles.textarea}
-            placeholder={EXAMPLES[placeholderIndex]}
-            value={value}
-            maxLength={MAX_LENGTH}
-            rows={3}
-            onChange={(event) => setValue(event.target.value)}
-            disabled={disabled}
-            autoComplete="off"
-          />
-          <div className={styles.cardFooter}>
-            <span className={styles.count}>
-              {value.length}/{MAX_LENGTH}
-            </span>
-            <button
-              className={styles.submit}
-              type="submit"
-              disabled={disabled || value.trim().length === 0}
-            >
-              Nope →
-            </button>
-          </div>
+        <textarea
+          id="challenge-input"
+          className={styles.textarea}
+          placeholder={EXAMPLES[placeholderIndex]}
+          value={value}
+          maxLength={MAX_LENGTH}
+          rows={3}
+          onChange={(event) => setValue(event.target.value)}
+          disabled={disabled}
+          autoComplete="off"
+        />
+        <div className={styles.cardFooter}>
+          <span className={styles.count}>
+            {value.length}/{MAX_LENGTH}
+          </span>
+          <button
+            className={styles.submit}
+            type="submit"
+            disabled={disabled || value.trim().length === 0}
+          >
+            Nope →
+          </button>
         </div>
       </div>
 
