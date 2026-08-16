@@ -90,6 +90,11 @@ services:
   frontend:
     build:
       target: runner
+      # NEXT_PUBLIC_ vars are inlined by Next.js at `pnpm build` time, not
+      # read at runtime - must be passed as a build arg (not `environment:`)
+      # or robots.txt/sitemap.xml/canonical URLs ship pointing at localhost.
+      args:
+        - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set in .env}
     restart: unless-stopped
     # Dev's 3000:3000 collides with other apps on this host - prod gets its
     # own free host port instead.

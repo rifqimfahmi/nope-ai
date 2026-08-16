@@ -18,9 +18,17 @@ CMD ["sh", "-c", "pnpm db:migrate && pnpm dev"]
 # never talks to FastAPI or Postgres directly (see src/app/api/), it only ever
 # calls this app's own route handlers, which read FASTAPI_URL/DATABASE_URL at
 # request time in the runner stage below.
+#
+# NEXT_PUBLIC_SITE_URL is the one exception - it's NEXT_PUBLIC_-prefixed, so
+# Next.js inlines it into the compiled output at `pnpm build` time, not read
+# at runtime. Must be passed as a build ARG (see docker-compose.prod.yml's
+# frontend build.args); without it this falls back to localhost, which is
+# what robots.txt/sitemap.xml/canonical URLs would ship to production.
 FROM deps AS builder
 COPY . .
 
+ARG NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm build
