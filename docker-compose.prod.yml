@@ -23,10 +23,30 @@
 # (src/app/api/). Nothing is exposed to the browser.
 #
 # Migrations are NOT run automatically - the `runner` target deliberately
-# excludes drizzle-kit to stay small. Apply them separately before deploying:
-#   cd frontend && DATABASE_URL=postgres://...@postgres-prod:5432/... pnpm db:migrate
+# excludes drizzle-kit to stay small. Apply them separately before deploying,
+# via the `migrate` service below (builder target, so drizzle-kit is present):
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml \
+#     --profile migrate run --rm migrate
 
 services:
+  # Base file's dev-only streamlit/postgres/phoenix have no place in prod -
+  # gate them behind a profile nothing here activates, so a bare `up -d` on
+  # the merged prod config can't accidentally instantiate them (only naming
+  # one explicitly, or activating --profile dev-only, would). Their prod
+  # counterparts (postgres-prod, phoenix-prod) are unaffected - profiles
+  # only apply to the service they're declared on.
+  streamlit:
+    profiles:
+      - dev-only
+
+  postgres:
+    profiles:
+      - dev-only
+
+  phoenix:
+    profiles:
+      - dev-only
+
   postgres-prod:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -71,6 +91,10 @@ services:
     build:
       target: runner
     restart: unless-stopped
+    # Dev's 3000:3000 collides with other apps on this host - prod gets its
+    # own free host port instead.
+    ports: !override
+      - "3008:3000"
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
     # The dev stage's bind mount + anti-shadow volumes don't apply to the
@@ -80,6 +104,24 @@ services:
     depends_on: !override
       fastapi:
         condition: service_started
+      postgres-prod:
+        condition: service_healthy
+
+  # One-off migration runner, built from the `builder` stage (has drizzle-kit,
+  # unlike `runner`) so it can apply migrations without bloating the prod
+  # image that actually serves traffic. Profile-gated like metabase-prod/newt
+  # so it never starts on a bare `up -d` - invoke it explicitly as a deploy
+  # step (see top-of-file comment).
+  migrate:
+    build:
+      context: ./frontend
+      target: builder
+    profiles:
+      - migrate
+    command: ["pnpm", "db:migrate"]
+    environment:
+      - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
+    depends_on:
       postgres-prod:
         condition: service_healthy
 
