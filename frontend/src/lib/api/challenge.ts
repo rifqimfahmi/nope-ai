@@ -41,8 +41,6 @@ export async function* streamChallenge(
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-    let decodedChunk = decoder.decode(value, { stream: true });
-    console.log({ decodedChunk });
     // sse_starlette terminates lines with CRLF; normalize to LF so the "\n\n"
     // event boundary and per-line "data:" splitting below both stay correct.
     buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");

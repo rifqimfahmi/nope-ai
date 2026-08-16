@@ -11,6 +11,7 @@ import { Header } from "@/components/Header/Header";
 import { ResultView } from "@/components/ResultView/ResultView";
 import { useChallengeStream } from "@/hooks/useChallengeStream";
 import { useCreateNopeMutation } from "@/hooks/useNope";
+import { SITE_NAME } from "@/lib/site";
 
 import styles from "./page.module.scss";
 
@@ -82,6 +83,7 @@ export default function Home() {
 
   return (
     <div className={styles.page}>
+      {result && <title>{`"${result.input}" — ${SITE_NAME}`}</title>}
       <Header onHomeClick={result ? handleAgain : undefined} />
       <main className={styles.main}>
         <AnimatePresence mode="wait" initial={false}>
