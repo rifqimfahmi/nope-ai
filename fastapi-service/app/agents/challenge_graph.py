@@ -129,6 +129,12 @@ async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState
     }
 
 
+def _route(state: ChallengeState, max_loops: int) -> str:
+    if state["approved"] or state["iteration"] >= max_loops:
+        return "end"
+    return "retry"
+
+
 @lru_cache
 def _compiled_graph(api_key: str, generate_model_name: str, review_model_name: str, max_loops: int):
     secret_api_key = SecretStr(api_key)
@@ -145,18 +151,15 @@ def _compiled_graph(api_key: str, generate_model_name: str, review_model_name: s
     async def review_node(state: ChallengeState) -> ChallengeState:
         return await _review(review_model, state)
 
-    def route(state: ChallengeState) -> str:
-        if state["approved"] or state["iteration"] >= max_loops:
-            return "end"
-        return "retry"
-
     graph = StateGraph(ChallengeState)
     graph.add_node("generate", generate_node)
     graph.add_node("review", review_node)
 
     graph.add_edge(START, "generate")
     graph.add_edge("generate", "review")
-    graph.add_conditional_edges("review", route, {"retry": "generate", "end": END})
+    graph.add_conditional_edges(
+        "review", lambda state: _route(state, max_loops), {"retry": "generate", "end": END}
+    )
     return graph.compile()
 
 

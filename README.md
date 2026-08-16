@@ -3,6 +3,30 @@
 Contrarian agent, split out of the Next.js `nope-ai-contrarian-ai` app so the
 AI/implementation side lives in Python (FastAPI) instead of the Next.js API route.
 
+## How the agent works
+
+`/challenge-me` isn't a single LLM call — it's a two-agent
+[LangGraph](https://github.com/langchain-ai/langgraph) loop
+(`fastapi-service/app/agents/challenge_graph.py`):
+
+```
+START → generate → review ─┬─ approved / max loops hit → END
+             ↑              │
+             └── retry ─────┘
+```
+
+- **`generate`** drafts a contrarian reply to the user's claim, folding in
+  feedback from previous rejected drafts (bounded by `HISTORY_WINDOW`).
+- **`review`** grades that draft against a system prompt + few-shot examples
+  and returns either `LGTM` or concrete feedback (a cheap deterministic check
+  for banned em dashes short-circuits a full model call).
+- If rejected, the graph routes back to `generate` with the reviewer's
+  feedback attached; this repeats until approval or `max_review_loops` is hit.
+- Both nodes stream token-by-token (`stream_mode=["messages", "updates"]`),
+  so the frontend can show which agent is "talking" in real time, and
+  per-call token cost is tracked and summed into the final SSE `complete`
+  event.
+
 ## Layout
 
 - [`fastapi-service/`](fastapi-service/README.md) — FastAPI service exposing `POST
