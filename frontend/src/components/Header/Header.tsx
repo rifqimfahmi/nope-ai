@@ -14,11 +14,13 @@ interface HeaderProps {
 export function Header({ onHomeClick }: HeaderProps) {
   return (
     <header className={styles.bar}>
-      <Link href="/nopes" className={styles.browseLink}>
-        Browse
-      </Link>
-      <div className={styles.themeToggle}>
-        <ThemeToggle />
+      <div className={styles.topRow}>
+        <Link href="/nopes" className={styles.browseLink}>
+          Browse
+        </Link>
+        <div className={styles.themeToggle}>
+          <ThemeToggle />
+        </div>
       </div>
       <Link
         href="/"

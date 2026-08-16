@@ -1,7 +1,11 @@
 @reference "../../app/globals.css";
 
 .bar {
-  @apply bg-base-100 border-base-300 relative flex flex-col items-center gap-1 border-b px-4 pt-5 pb-4 text-center sm:px-6;
+  @apply bg-base-100 border-base-300 flex flex-col items-center gap-1 border-b px-4 pt-5 pb-4 text-center sm:px-6;
+}
+
+.topRow {
+  @apply flex w-full items-center justify-between;
 }
 
 .title {
@@ -21,9 +25,9 @@
 }
 
 .themeToggle {
-  @apply absolute top-3 right-3 sm:top-4 sm:right-6;
+  @apply flex items-center;
 }
 
 .browseLink {
-  @apply link link-hover absolute top-4 left-3 text-sm font-medium text-base-content/60 sm:top-5 sm:left-6;
+  @apply link link-hover text-sm font-medium text-base-content/60;
 }
