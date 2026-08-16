@@ -24,8 +24,12 @@
   @apply text-sm text-base-content/60 max-w-sm;
 }
 
-.themeToggle {
-  @apply flex items-center;
+.actions {
+  @apply flex items-center gap-2;
+}
+
+.githubLink {
+  @apply bg-base-100 border-base-300 text-base-content hover:bg-base-200 flex h-8 w-8 items-center justify-center rounded-lg border text-sm transition-colors;
 }
 
 .browseLink {

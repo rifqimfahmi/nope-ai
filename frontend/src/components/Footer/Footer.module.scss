@@ -11,3 +11,7 @@
 .links {
   @apply flex items-center gap-4;
 }
+
+.githubLink {
+  @apply inline-flex items-center gap-1;
+}
