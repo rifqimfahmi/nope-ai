@@ -102,6 +102,7 @@ services:
       - "3008:3000"
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
+      - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set in .env}
     # The dev stage's bind mount + anti-shadow volumes don't apply to the
     # self-contained runner image - clear them instead of running the
     # production container with the host's ./frontend mounted over it.

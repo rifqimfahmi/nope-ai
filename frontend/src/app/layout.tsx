@@ -7,8 +7,6 @@ import { SITE_NAME, SITE_TAGLINE, SITE_URL } from "@/lib/site";
 import "./globals.css";
 import { QueryProvider } from "./providers/QueryProvider";
 
-const plausibleSrc = process.env.NEXT_PUBLIC_PLAUSIBLE_SRC;
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -69,13 +67,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
       <body className="min-h-full flex flex-col">
-        {plausibleSrc ? (
-          <PlausibleProvider src={plausibleSrc}>
-            <QueryProvider>{children}</QueryProvider>
-          </PlausibleProvider>
-        ) : (
+        <PlausibleProvider
+          domain="https://nopeai.rifqimfahmi.dev/"
+          customDomain="https://your-plausible-host.example.com"
+          taggedEvents
+          trackOutboundLinks
+        >
           <QueryProvider>{children}</QueryProvider>
-        )}
+        </PlausibleProvider>
       </body>
     </html>
   );
