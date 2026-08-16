@@ -68,7 +68,7 @@ up` gives you:
 
 ```bash
 cp .env.example .env
-docker compose up --build
+docker compose up --build -d
 ```
 
 - FastAPI: http://localhost:8000 (docs at `/docs`)
