@@ -2,4 +2,8 @@
 
 .bar {
   @apply border-base-300 text-base-content/50 mt-auto flex flex-col items-center gap-2 border-t px-4 py-6 text-center text-xs sm:flex-row sm:justify-between sm:px-6;
+
+  a {
+    @apply hover:text-base-content transition-colors;
+  }
 }
