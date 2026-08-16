@@ -80,6 +80,11 @@ services:
     restart: unless-stopped
     environment:
       - PHOENIX_COLLECTOR_ENDPOINT=http://phoenix-prod:4317
+    # /challenge-me has no auth of its own and is meant to be reached only
+    # through the frontend's proxy route (which rate-limits by IP) - unlike
+    # dev's "8000:8000", never bind this to the public interface in prod.
+    ports: !override
+      - "127.0.0.1:8000:8000"
     # The dev stage's bind mount + venv volume don't apply to the
     # self-contained runner image - clear them instead of running the
     # production container with the host's ./fastapi-service mounted over it.

@@ -76,8 +76,9 @@ async def _challenge_events(user_input: str) -> AsyncIterator[dict[str, str]]:
                         yield _phase(REVIEWING_LINES)
                     elif update["node"] == "review" and not update["approved"]:
                         yield _phase(REGENERATING_LINES)
-        except Exception as exc:  # noqa: BLE001 - surface any agent failure as an SSE error event
-            yield _sse("error", str(exc))
+        except Exception as exc:  # noqa: BLE001 - log the real failure, but don't leak internals to the client
+            print(f"challenge_me error: {exc}")
+            yield _sse("error", "Something went wrong generating a response. Please try again.")
 
 
 @router.post("/challenge-me")

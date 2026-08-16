@@ -14,6 +14,7 @@ export const streamEventSchema = z.discriminatedUnion("type", [
     content: z.string(),
     timestamp: z.number(),
     cost: z.number().optional(),
+    id: z.number(),
   }),
   z.object({ type: z.literal("error"), content: z.string(), timestamp: z.number() }),
 ]);
@@ -29,11 +30,3 @@ export const nopeSchema = z.object({
 });
 
 export type Nope = z.infer<typeof nopeSchema>;
-
-export const createNopeSchema = z.object({
-  input: z.string().trim().min(1),
-  reply: z.string().trim().min(1),
-  cost: z.number().nonnegative().optional(),
-});
-
-export type CreateNope = z.infer<typeof createNopeSchema>;

@@ -11,7 +11,6 @@ import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
 import { ResultView } from "@/components/ResultView/ResultView";
 import { useChallengeStream } from "@/hooks/useChallengeStream";
-import { useCreateNopeMutation } from "@/hooks/useNope";
 import { SITE_NAME } from "@/lib/site";
 
 import styles from "./page.module.scss";
@@ -40,18 +39,10 @@ const backVariants = {
 export default function Home() {
   const [result, setResult] = useState<CompletedResult | null>(null);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
-  const createNopeMutation = useCreateNopeMutation();
-  const { status, message, error, start, reset } = useChallengeStream((input, reply, cost) => {
-    createNopeMutation.mutate(
-      { input, reply, cost },
-      {
-        onSuccess: (row) => {
-          window.history.pushState(null, "", `/nope/${row.id}`);
-          setDirection("forward");
-          setResult(row);
-        },
-      },
-    );
+  const { status, message, error, start, reset } = useChallengeStream((id, input, reply) => {
+    window.history.pushState(null, "", `/nope/${id}`);
+    setDirection("forward");
+    setResult({ id, input, reply, reactions: 0 });
   });
 
   useEffect(() => {

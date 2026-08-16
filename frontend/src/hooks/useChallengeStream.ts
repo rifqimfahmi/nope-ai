@@ -23,7 +23,7 @@ const INITIAL_STATE: ChallengeStreamState = {
 };
 
 export function useChallengeStream(
-  onComplete?: (input: string, reply: string, cost?: number) => void,
+  onComplete?: (id: number, input: string, reply: string, cost?: number) => void,
 ) {
   const [state, setState] = useState<ChallengeStreamState>(INITIAL_STATE);
   const abortRef = useRef<AbortController | null>(null);
@@ -62,7 +62,7 @@ export function useChallengeStream(
                 reply_length_bucket: lengthBucket(event.content.length),
               },
             });
-            onCompleteRef.current?.(input, event.content, event.cost);
+            onCompleteRef.current?.(event.id, input, event.content, event.cost);
             break;
           case "error":
             setState({ status: "error", message: "", draft: "", error: event.content });
