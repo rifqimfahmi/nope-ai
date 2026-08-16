@@ -6,6 +6,11 @@ export async function fetchNopes(): Promise<Nope[]> {
   return nopeSchema.array().parse(data);
 }
 
+export async function fetchTopNopes(limit: number): Promise<Nope[]> {
+  const { data } = await http.get("/nope", { params: { sort: "top", limit } });
+  return nopeSchema.array().parse(data);
+}
+
 export async function createNope(payload: CreateNope): Promise<Nope> {
   const { data } = await http.post("/nope", payload);
   return nopeSchema.parse(data);

@@ -1,0 +1,25 @@
+@reference "../../app/globals.css";
+
+.section {
+  @apply mt-4 flex w-full flex-col gap-3 border-t border-base-300 pt-8;
+}
+
+.heading {
+  @apply flex items-center justify-between;
+}
+
+.title {
+  @apply text-sm font-semibold text-base-content/70;
+}
+
+.browseLink {
+  @apply link link-primary text-sm font-medium no-underline;
+}
+
+.list {
+  @apply flex flex-col gap-2;
+}
+
+.item {
+  @apply opacity-60 transition-opacity hover:opacity-100;
+}

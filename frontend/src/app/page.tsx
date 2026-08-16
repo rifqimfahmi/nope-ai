@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { ChallengeForm } from "@/components/ChallengeForm/ChallengeForm";
 import { ErrorAlert } from "@/components/ErrorAlert/ErrorAlert";
+import { Feed } from "@/components/Feed/Feed";
 import { Footer } from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
@@ -127,6 +128,7 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+        <Feed />
       </main>
       <Footer />
     </div>

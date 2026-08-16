@@ -1,0 +1,21 @@
+@reference "../../app/globals.css";
+
+.card {
+  @apply card card-border flex-row items-start justify-between gap-3 bg-base-100 p-4 transition-colors hover:border-primary/50;
+}
+
+.body {
+  @apply flex flex-1 flex-col gap-1 overflow-hidden;
+}
+
+.input {
+  @apply line-clamp-1 text-sm text-base-content/60 italic;
+}
+
+.reply {
+  @apply line-clamp-2 font-medium;
+}
+
+.reactions {
+  @apply flex shrink-0 items-center gap-1 text-xs font-medium text-base-content/50;
+}

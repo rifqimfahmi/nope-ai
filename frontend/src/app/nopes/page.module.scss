@@ -1,0 +1,45 @@
+@reference "../../app/globals.css";
+
+.heading {
+  @apply flex items-center justify-between;
+}
+
+.title {
+  @apply font-display text-2xl font-bold tracking-tight;
+}
+
+.sortToggle {
+  @apply flex items-center gap-1 rounded-field bg-base-200 p-1;
+}
+
+.sortLink {
+  @apply rounded-field px-3 py-1 text-sm font-medium text-base-content/60;
+}
+
+.sortActive {
+  @apply rounded-field bg-base-100 px-3 py-1 text-sm font-medium text-base-content;
+}
+
+.list {
+  @apply flex flex-col gap-2;
+}
+
+.empty {
+  @apply text-sm text-base-content/50;
+}
+
+.pagination {
+  @apply mt-4 flex items-center justify-between text-sm;
+}
+
+.pageLink {
+  @apply link link-primary font-medium no-underline;
+}
+
+.pageLinkDisabled {
+  @apply text-base-content/30;
+}
+
+.pageIndicator {
+  @apply text-base-content/50;
+}

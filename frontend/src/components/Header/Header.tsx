@@ -14,6 +14,9 @@ interface HeaderProps {
 export function Header({ onHomeClick }: HeaderProps) {
   return (
     <header className={styles.bar}>
+      <Link href="/nopes" className={styles.browseLink}>
+        Browse
+      </Link>
       <div className={styles.themeToggle}>
         <ThemeToggle />
       </div>

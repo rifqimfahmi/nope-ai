@@ -1,13 +1,18 @@
-import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/db";
 import { challenges } from "@/db/schema";
+import { getRecentNopes, getTopNopes } from "@/db/queries";
 import { createNopeSchema } from "@/lib/schemas";
 
-export async function GET() {
-  const rows = await db.select().from(challenges).orderBy(desc(challenges.createdAt)).limit(50);
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const limit = Math.min(Number(searchParams.get("limit")) || 50, 50);
+
+  const rows =
+    searchParams.get("sort") === "top" ? await getTopNopes(limit) : await getRecentNopes(limit);
+
   return NextResponse.json(rows);
 }
 

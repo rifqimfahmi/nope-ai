@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 
 import { Footer } from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
+import { NopeCard } from "@/components/NopeCard/NopeCard";
 import { ResultView } from "@/components/ResultView/ResultView";
-import { getChallengeById } from "@/db/queries";
+import { getChallengeById, getRelatedNopes } from "@/db/queries";
 
 import styles from "../../page.module.scss";
+import relatedStyles from "./related.module.scss";
 
 async function getChallenge(id: string) {
   const parsedId = Number(id);
@@ -48,6 +50,8 @@ export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
     notFound();
   }
 
+  const related = await getRelatedNopes(challenge.id, 3);
+
   return (
     <div className={styles.page}>
       <Header />
@@ -58,6 +62,18 @@ export default async function ResultPage({ params }: PageProps<"/nope/[id]">) {
           reply={challenge.reply}
           reactions={challenge.reactions}
         />
+        {related.length > 0 && (
+          <section className={relatedStyles.section}>
+            <h2 className={relatedStyles.title}>More Nopes</h2>
+            <ul className={relatedStyles.list}>
+              {related.map((item) => (
+                <li key={item.id} className={relatedStyles.item}>
+                  <NopeCard id={item.id} input={item.input} reply={item.reply} reactions={item.reactions} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
       </main>
       <Footer />
     </div>
