@@ -1,7 +1,12 @@
 # nope-ai-2
 
+[![Live](https://img.shields.io/badge/live-nopeai.rifqimfahmi.dev-blue)](https://nopeai.rifqimfahmi.dev)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
+
 Contrarian agent, split out of the Next.js `nope-ai-contrarian-ai` app so the
 AI/implementation side lives in Python (FastAPI) instead of the Next.js API route.
+
+Repo: [github.com/rifqimfahmi/nope-ai](https://github.com/rifqimfahmi/nope-ai)
 
 ## How the agent works
 

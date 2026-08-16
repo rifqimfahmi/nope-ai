@@ -18,6 +18,9 @@ dependencies = [
     "uvicorn[standard]>=0.52.1",
 ]
 
+[project.urls]
+Repository = "https://github.com/rifqimfahmi/nope-ai"
+
 [dependency-groups]
 dev = [
     "pytest>=8.4.0",

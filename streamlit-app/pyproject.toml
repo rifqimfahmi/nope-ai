@@ -8,3 +8,6 @@ dependencies = [
     "requests>=2.34.2",
     "streamlit>=1.61.1",
 ]
+
+[project.urls]
+Repository = "https://github.com/rifqimfahmi/nope-ai"

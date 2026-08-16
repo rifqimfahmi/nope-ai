@@ -7,3 +7,7 @@
     @apply hover:text-base-content transition-colors;
   }
 }
+
+.links {
+  @apply flex items-center gap-4;
+}
