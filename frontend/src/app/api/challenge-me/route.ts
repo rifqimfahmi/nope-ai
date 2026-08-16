@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { isRateLimited } from "@/lib/rate-limit";
 import { challengeRequestSchema } from "@/lib/schemas";
 
 const FASTAPI_URL = process.env.FASTAPI_URL;
@@ -10,9 +11,23 @@ const FASTAPI_URL = process.env.FASTAPI_URL;
 // response straight through rather than re-parsing/re-serializing it.
 export const dynamic = "force-dynamic";
 
+// Best-effort client IP: trust the first hop's x-forwarded-for since this
+// only ever sits behind our own reverse proxy/tunnel, never directly on the internet.
+function getClientIp(request: Request): string {
+  const forwardedFor = request.headers.get("x-forwarded-for");
+  return forwardedFor?.split(",")[0]?.trim() || "unknown";
+}
+
 export async function POST(request: Request) {
   if (!FASTAPI_URL) {
     return NextResponse.json({ error: "FASTAPI_URL is not set" }, { status: 500 });
+  }
+
+  if (isRateLimited(getClientIp(request))) {
+    return NextResponse.json(
+      { error: "Too many requests. Please slow down and try again shortly." },
+      { status: 429, headers: { "Retry-After": "60" } },
+    );
   }
 
   const body = await request.json();
