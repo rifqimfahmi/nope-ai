@@ -5,50 +5,19 @@ import time
 from collections.abc import AsyncIterator
 
 from fastapi import APIRouter
+from openinference.semconv.trace import OpenInferenceSpanKindValues, SpanAttributes
 from opentelemetry import trace
 from sse_starlette.sse import EventSourceResponse
 
 from app.agents.challenge_graph import run_challenge_stream
 from app.config import get_settings
+from app.phase_lines import GENERATING_LINES, REGENERATING_LINES, REVIEWING_LINES
 from app.schemas import ChallengeRequest
 
 router = APIRouter()
 tracer = trace.get_tracer(__name__)
 
 MIN_PHASE_DISPLAY_SECONDS = 1.5
-
-GENERATING_LINES = [
-    "Preparing a reason why you're wrong...",
-    "Cooking up some brutal honesty...",
-    "Loading maximum sass...",
-    "Sharpening the knives...",
-    "Consulting my inner asshole...",
-    "Summoning zero empathy...",
-    "Calculating exactly how wrong you are...",
-    "Drafting your reality check...",
-]
-
-REGENERATING_LINES = [
-    "Dealing with another nonsense...",
-    "That wasn't harsh enough. Trying again...",
-    "Back to the drawing board, but meaner...",
-    "Nope, too nice. Redoing...",
-    "Recalibrating the savagery...",
-    "You really wanted worse? Bet...",
-    "Turning the mean dial up...",
-    "Scrapping that, going feral...",
-]
-
-REVIEWING_LINES = [
-    "Fact-checking the savagery...",
-    "Making sure this really stings...",
-    "Running quality control on the roast...",
-    "Checking if this crosses a line (it does)...",
-    "Peer-reviewing the burn...",
-    "Taste-testing for maximum sting...",
-    "Confirming this will ruin your day...",
-    "Final polish on the roast...",
-]
 
 
 def _now_ms() -> int:
@@ -86,7 +55,13 @@ async def _with_min_display_time(
 
 
 async def _challenge_events(user_input: str) -> AsyncIterator[dict[str, str]]:
-    with tracer.start_as_current_span("challenge_me"):
+    with tracer.start_as_current_span(
+        "challenge_me",
+        attributes={
+            SpanAttributes.OPENINFERENCE_SPAN_KIND: OpenInferenceSpanKindValues.CHAIN.value,
+            SpanAttributes.INPUT_VALUE: user_input,
+        },
+    ) as span:
         try:
             yield _phase(GENERATING_LINES)
             async for update in run_challenge_stream(user_input, get_settings()):
@@ -94,6 +69,7 @@ async def _challenge_events(user_input: str) -> AsyncIterator[dict[str, str]]:
                 # if update["type"] == "messages" and update["node"] == "generate":
                 #     yield _sse("token", update["content"])
                 if update["type"] == "complete":
+                    span.set_attribute(SpanAttributes.OUTPUT_VALUE, update["draft"])
                     yield _sse("complete", update["draft"], cost=update["cost"])
                 elif update["type"] == "updates":
                     if update["node"] == "generate":
