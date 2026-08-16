@@ -11,12 +11,3 @@ export const challenges = pgTable("challenges", {
 
 export type Challenge = typeof challenges.$inferSelect;
 export type NewChallenge = typeof challenges.$inferInsert;
-
-export const rateLimitHits = pgTable("rate_limit_hits", {
-  id: serial("id").primaryKey(),
-  ip: text("ip").notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});
-
-export type RateLimitHit = typeof rateLimitHits.$inferSelect;
-export type NewRateLimitHit = typeof rateLimitHits.$inferInsert;

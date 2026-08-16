@@ -1,7 +1,7 @@
 import { desc, eq, ne, sql } from "drizzle-orm";
 
 import { db } from "@/db";
-import { challenges, rateLimitHits } from "@/db/schema";
+import { challenges } from "@/db/schema";
 
 const NOPES_PAGE_SIZE = 12;
 
@@ -48,8 +48,4 @@ export async function getRelatedNopes(excludeId: number, limit: number) {
     .where(ne(challenges.id, excludeId))
     .orderBy(sql`random()`)
     .limit(limit);
-}
-
-export async function recordRateLimitHit(ip: string) {
-  await db.insert(rateLimitHits).values({ ip });
 }

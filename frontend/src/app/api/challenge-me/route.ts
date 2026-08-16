@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import { db } from "@/db";
-import { recordRateLimitHit } from "@/db/queries";
 import { challenges } from "@/db/schema";
 import { isRateLimited } from "@/lib/rate-limit";
 import { challengeRequestSchema } from "@/lib/schemas";
@@ -60,7 +59,6 @@ export async function POST(request: Request) {
   const clientIp = getClientIp(request);
 
   if (isRateLimited(clientIp)) {
-    await recordRateLimitHit(clientIp);
     return NextResponse.json(
       { error: "Too many requests. Please slow down and try again shortly." },
       { status: 429, headers: { "Retry-After": "60" } },

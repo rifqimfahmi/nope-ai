@@ -29,6 +29,13 @@
       "when": 1786853274237,
       "tag": "0003_square_bruce_banner",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1786892737611,
+      "tag": "0004_regular_wallow",
+      "breakpoints": true
     }
   ]
 }
