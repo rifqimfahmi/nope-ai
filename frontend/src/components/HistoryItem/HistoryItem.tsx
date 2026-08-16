@@ -1,9 +1,9 @@
-import type { HistoryItem as HistoryItemType } from "@/lib/schemas";
+import type { Nope } from "@/lib/schemas";
 
 import styles from "./HistoryItem.module.scss";
 
 interface HistoryItemProps {
-  item: HistoryItemType;
+  item: Nope;
   onDelete: (id: number) => void;
   deleting: boolean;
 }

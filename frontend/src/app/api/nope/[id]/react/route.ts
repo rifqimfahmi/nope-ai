@@ -4,12 +4,12 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { challenges } from "@/db/schema";
 
-export async function POST(_request: Request, ctx: RouteContext<"/api/history/[id]/react">) {
+export async function POST(_request: Request, ctx: RouteContext<"/api/nope/[id]/react">) {
   const { id } = await ctx.params;
   const parsedId = Number(id);
 
   if (!Number.isInteger(parsedId)) {
-    return NextResponse.json({ error: "Invalid history id" }, { status: 400 });
+    return NextResponse.json({ error: "Invalid nope id" }, { status: 400 });
   }
 
   const [row] = await db

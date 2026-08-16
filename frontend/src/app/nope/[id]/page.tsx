@@ -1,12 +1,10 @@
-import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Footer } from "@/components/Footer/Footer";
 import { Header } from "@/components/Header/Header";
 import { ResultView } from "@/components/ResultView/ResultView";
-import { db } from "@/db";
-import { challenges } from "@/db/schema";
+import { getChallengeById } from "@/db/queries";
 
 import styles from "../../page.module.scss";
 
@@ -14,8 +12,7 @@ async function getChallenge(id: string) {
   const parsedId = Number(id);
   if (!Number.isInteger(parsedId)) return undefined;
 
-  const [row] = await db.select().from(challenges).where(eq(challenges.id, parsedId));
-  return row;
+  return getChallengeById(parsedId);
 }
 
 export async function generateMetadata({

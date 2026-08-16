@@ -13,7 +13,7 @@ import {
 } from "react";
 import ReactMarkdown, { type Components } from "react-markdown";
 
-import { useReactMutation } from "@/hooks/useHistory";
+import { useReactMutation } from "@/hooks/useNope";
 import type { AnalyticsEvents } from "@/lib/analytics";
 
 import styles from "./ResultView.module.scss";

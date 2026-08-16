@@ -3,7 +3,7 @@
 The real UI for Nope AI. The browser only ever talks to this
 app's own origin — `src/app/api/challenge-me/route.ts` proxies server-side to
 [`fastapi-service`](../fastapi-service) for the challenge SSE stream, and
-`src/app/api/history/` handlers own the Postgres-backed challenge history
+`src/app/api/nope/` handlers own the Postgres-backed challenge history
 directly (via Drizzle). FastAPI is an internal upstream, never exposed to
 the client.
 
@@ -17,8 +17,8 @@ the client.
   module needs `@reference "<path>/app/globals.css";` at the top since
   Tailwind v4 processes every CSS file independently
 - **Zod** for request/response validation (`src/lib/schemas.ts`)
-- **TanStack Query** for the history list/mutations (`src/hooks/useHistory.ts`)
-- **Axios** for calls to this app's own `/api/history` route handlers
+- **TanStack Query** for the history list/mutations (`src/hooks/useNope.ts`)
+- **Axios** for calls to this app's own `/api/nope` route handlers
   (`src/lib/api/http.ts`) — the challenge stream itself is consumed with a
   raw `fetch` + `ReadableStream` reader instead, since axios doesn't stream
   well in the browser (`src/lib/api/challenge.ts`)

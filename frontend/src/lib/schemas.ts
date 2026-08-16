@@ -20,7 +20,7 @@ export const streamEventSchema = z.discriminatedUnion("type", [
 
 export type StreamEvent = z.infer<typeof streamEventSchema>;
 
-export const historyItemSchema = z.object({
+export const nopeSchema = z.object({
   id: z.number(),
   input: z.string(),
   reply: z.string(),
@@ -28,12 +28,12 @@ export const historyItemSchema = z.object({
   createdAt: z.string(),
 });
 
-export type HistoryItem = z.infer<typeof historyItemSchema>;
+export type Nope = z.infer<typeof nopeSchema>;
 
-export const createHistoryItemSchema = z.object({
+export const createNopeSchema = z.object({
   input: z.string().trim().min(1),
   reply: z.string().trim().min(1),
   cost: z.number().nonnegative().optional(),
 });
 
-export type CreateHistoryItem = z.infer<typeof createHistoryItemSchema>;
+export type CreateNope = z.infer<typeof createNopeSchema>;

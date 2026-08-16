@@ -15,7 +15,7 @@ AI/implementation side lives in Python (FastAPI) instead of the Next.js API rout
 - [`frontend/`](frontend/README.md) — the real Next.js frontend. The browser
   only ever talks to this app's own origin: `/api/challenge-me` proxies
   server-side to FastAPI for the challenge stream (FastAPI is never exposed to
-  the client), and `/api/history` owns Drizzle/Postgres-backed challenge
+  the client), and `/api/nope` owns Drizzle/Postgres-backed challenge
   history directly.
 
 See each service's own README for detailed setup/run instructions. Quick version:

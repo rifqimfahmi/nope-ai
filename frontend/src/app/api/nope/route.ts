@@ -4,7 +4,7 @@ import { z } from "zod";
 
 import { db } from "@/db";
 import { challenges } from "@/db/schema";
-import { createHistoryItemSchema } from "@/lib/schemas";
+import { createNopeSchema } from "@/lib/schemas";
 
 export async function GET() {
   const rows = await db.select().from(challenges).orderBy(desc(challenges.createdAt)).limit(50);
@@ -13,7 +13,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-  const parsed = createHistoryItemSchema.safeParse(body);
+  const parsed = createNopeSchema.safeParse(body);
 
   if (!parsed.success) {
     return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });

@@ -10,7 +10,7 @@ import { Header } from "@/components/Header/Header";
 // import { HistoryList } from "@/components/HistoryList/HistoryList";
 import { ResultView } from "@/components/ResultView/ResultView";
 import { useChallengeStream } from "@/hooks/useChallengeStream";
-import { useCreateHistoryMutation } from "@/hooks/useHistory";
+import { useCreateNopeMutation } from "@/hooks/useNope";
 
 import styles from "./page.module.scss";
 
@@ -38,9 +38,9 @@ const backVariants = {
 export default function Home() {
   const [result, setResult] = useState<CompletedResult | null>(null);
   const [direction, setDirection] = useState<"forward" | "back">("forward");
-  const createHistoryMutation = useCreateHistoryMutation();
+  const createNopeMutation = useCreateNopeMutation();
   const { status, message, error, start, reset } = useChallengeStream((input, reply, cost) => {
-    createHistoryMutation.mutate(
+    createNopeMutation.mutate(
       { input, reply, cost },
       {
         onSuccess: (row) => {

@@ -1,18 +1,14 @@
 "use client";
 
 import { HistoryItem } from "@/components/HistoryItem/HistoryItem";
-import {
-  useClearHistoryMutation,
-  useDeleteHistoryMutation,
-  useHistoryQuery,
-} from "@/hooks/useHistory";
+import { useClearNopesMutation, useDeleteNopeMutation, useNopeListQuery } from "@/hooks/useNope";
 
 import styles from "./HistoryList.module.scss";
 
 export function HistoryList() {
-  const { data: history, isLoading } = useHistoryQuery();
-  const deleteMutation = useDeleteHistoryMutation();
-  const clearMutation = useClearHistoryMutation();
+  const { data: history, isLoading } = useNopeListQuery();
+  const deleteMutation = useDeleteNopeMutation();
+  const clearMutation = useClearNopesMutation();
 
   if (isLoading || !history || history.length === 0) {
     return (
