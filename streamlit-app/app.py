@@ -37,10 +37,8 @@ st.caption(f"Talking to FastAPI service at {FASTAPI_URL}")
 fact = st.text_input("Say something you believe is true:", placeholder="Water is wet.")
 go = st.button("Challenge me", type="primary", disabled=not fact)
 
-PHASE_LABELS = {"generating": "Generating...", "reviewing": "Reviewing..."}
-
 if go:
-    with st.status(PHASE_LABELS["generating"], expanded=True) as status:
+    with st.status("Generating...", expanded=True) as status:
         answer_box = st.empty()
         answer_text = ""
         error_text = None
@@ -60,17 +58,14 @@ if go:
                     print(f"stream {line}")
 
                     if event["type"] == "phase":
-                        if event["content"] == "generating":
-                            answer_text = ""
-                            answer_box.empty()
-                        status.update(label=PHASE_LABELS[event["content"]])
+                        status.update(label=event["content"])
                     elif event["type"] == "token":
                         answer_text += event["content"]
                         answer_box.markdown(f"**{answer_text}▌**")
                     elif event["type"] == "complete":
                         answer_text = event["content"]
                         answer_box.markdown(f"**{answer_text}**")
-                        status.update(label="Done!", state="complete", expanded=False)
+                        status.update(label="Done!", state="complete", expanded=True)
                     elif event["type"] == "error":
                         error_text = event["content"]
                         status.update(label="Error", state="error")
