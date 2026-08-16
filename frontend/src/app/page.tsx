@@ -82,7 +82,7 @@ export default function Home() {
 
   return (
     <div className={styles.page}>
-      <Header />
+      <Header onHomeClick={result ? handleAgain : undefined} />
       <main className={styles.main}>
         <AnimatePresence mode="wait" initial={false}>
           {result ? (

@@ -7,13 +7,28 @@ import { SITE_TAGLINE } from "@/lib/site";
 import logo from "../../app/icon.png";
 import styles from "./Header.module.scss";
 
-export function Header() {
+interface HeaderProps {
+  onHomeClick?: () => void;
+}
+
+export function Header({ onHomeClick }: HeaderProps) {
   return (
     <header className={styles.bar}>
       <div className={styles.themeToggle}>
         <ThemeToggle />
       </div>
-      <Link href="/" className={styles.title}>
+      <Link
+        href="/"
+        className={styles.title}
+        onClick={
+          onHomeClick
+            ? (event) => {
+                event.preventDefault();
+                onHomeClick();
+              }
+            : undefined
+        }
+      >
         <Image src={logo} alt="" aria-hidden="true" priority className={styles.logo} width={32} height={32} />
         <span className={styles.titleText}>Nope AI</span>
       </Link>
