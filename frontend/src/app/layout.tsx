@@ -68,10 +68,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <PlausibleProvider
-          domain="https://nopeai.rifqimfahmi.dev/"
-          customDomain="https://your-plausible-host.example.com"
-          taggedEvents
-          trackOutboundLinks
+          src="https://your-plausible-host.example.com/js/script.tagged-events.outbound-links.js"
+          scriptProps={{ "data-domain": "nopeai.rifqimfahmi.dev" } as React.ScriptHTMLAttributes<HTMLScriptElement>}
         >
           <QueryProvider>{children}</QueryProvider>
         </PlausibleProvider>
