@@ -115,6 +115,7 @@ export default function Home() {
             >
               <ChallengeForm
                 onSubmit={start}
+                onCancel={reset}
                 disabled={streaming}
                 status={status}
                 statusMessage={message}

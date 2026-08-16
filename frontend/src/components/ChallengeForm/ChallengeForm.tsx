@@ -1,5 +1,6 @@
 "use client";
 
+import { Square } from "lucide-react";
 import { usePlausible } from "next-plausible";
 import { useEffect, useState, type SubmitEvent } from "react";
 
@@ -25,12 +26,13 @@ const PLACEHOLDER_ROTATE_MS = 2800;
 
 interface ChallengeFormProps {
   onSubmit: (input: string) => void;
+  onCancel: () => void;
   disabled: boolean;
   status: ChallengeStatus;
   statusMessage: string;
 }
 
-export function ChallengeForm({ onSubmit, disabled, status, statusMessage }: ChallengeFormProps) {
+export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMessage }: ChallengeFormProps) {
   const [value, setValue] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
@@ -92,19 +94,32 @@ export function ChallengeForm({ onSubmit, disabled, status, statusMessage }: Cha
           <span className={styles.count}>
             {value.length}/{MAX_LENGTH}
           </span>
-          <button
-            className={styles.submit}
-            type="submit"
-            disabled={disabled || value.trim().length === 0}
-          >
-            Nope →
-          </button>
+          {disabled ? (
+            <button
+              className={styles.stop}
+              type="button"
+              onClick={onCancel}
+              aria-label="Stop generating"
+            >
+              <Square size={16} fill="currentColor" />
+            </button>
+          ) : (
+            <button
+              className={styles.submit}
+              type="submit"
+              disabled={value.trim().length === 0}
+            >
+              Nope →
+            </button>
+          )}
         </div>
       </div>
 
       {validationError && <p className={styles.error}>{validationError}</p>}
 
-      <PhaseStatus status={status} message={statusMessage} />
+      <div className={styles.phaseStatus}>
+        <PhaseStatus status={status} message={statusMessage} />
+      </div>
 
       {!disabled && (
         <div className={styles.examples}>

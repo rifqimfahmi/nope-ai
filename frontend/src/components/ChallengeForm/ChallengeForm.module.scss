@@ -32,8 +32,32 @@
   @apply btn border-(--color-nope-from) bg-(--color-nope-from) text-white transition-transform btn-sm hover:border-(--color-nope-via) hover:bg-(--color-nope-via) active:scale-95 sm:btn-md;
 }
 
+.stop {
+  @apply btn btn-circle relative border-(--color-nope-from)/20 bg-(--color-nope-from)/10 text-(--color-nope-from) transition-transform btn-sm hover:border-(--color-nope-from)/35 hover:bg-(--color-nope-from)/20 active:scale-95 sm:btn-md;
+
+  &::before {
+    @apply absolute inset-0 rounded-full bg-(--color-nope-from)/25 content-[''];
+    animation: stop-pulse 1.8s ease-out infinite;
+  }
+}
+
+@keyframes stop-pulse {
+  0% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.8);
+  }
+}
+
 .error {
   @apply text-sm text-error;
+}
+
+.phaseStatus {
+  @apply mt-3;
 }
 
 .examples {
