@@ -62,7 +62,7 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
   const [downloading, setDownloading] = useState(false);
   const [reactionCount, setReactionCount] = useState(reactions);
   const reacted = useReacted(id);
-  const cardRef = useRef<HTMLDivElement>(null);
+  const downloadCardRef = useRef<HTMLDivElement>(null);
   const reactMutation = useReactMutation();
   const plausible = usePlausible<AnalyticsEvents>();
 
@@ -105,10 +105,10 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
   }
 
   async function handleDownload() {
-    if (!cardRef.current) return;
+    if (!downloadCardRef.current) return;
     setDownloading(true);
     try {
-      const dataUrl = await toPng(cardRef.current, { pixelRatio: 2 });
+      const dataUrl = await toPng(downloadCardRef.current, { pixelRatio: 2 });
       const link = document.createElement("a");
       link.download = `nope-ai-${id}.png`;
       link.href = dataUrl;
@@ -120,12 +120,21 @@ export function ResultView({ id, input, reply, reactions, onAgain }: ResultViewP
 
   return (
     <div className={styles.wrapper}>
-      <div className={styles.card} ref={cardRef}>
+      <div className={styles.card}>
         <p className={styles.claim}>&ldquo;{input}&rdquo;</p>
         <p className={styles.reply}>
           <ReactMarkdown components={markdownComponents}>{reply}</ReactMarkdown>
         </p>
         <span className={styles.watermark}>nope-ai</span>
+      </div>
+      <div className={styles.downloadCardWrapper} aria-hidden>
+        <div className={styles.downloadCard} ref={downloadCardRef}>
+          <p className={styles.claim}>&ldquo;{input}&rdquo;</p>
+          <p className={styles.reply}>
+            <ReactMarkdown components={markdownComponents}>{reply}</ReactMarkdown>
+          </p>
+          <span className={styles.watermark}>nope-ai</span>
+        </div>
       </div>
       <div className={styles.actions}>
         <button

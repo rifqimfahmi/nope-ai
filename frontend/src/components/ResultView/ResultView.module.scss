@@ -5,7 +5,22 @@
 }
 
 .card {
-  @apply flex flex-col gap-4 rounded-2xl bg-base-100 p-6;
+  @apply flex flex-col gap-4 rounded-2xl bg-base-100 py-6;
+}
+
+// Wrapper keeps the off-screen positioning; html-to-image bakes the
+// captured node's own computed style (including position/offset) into the
+// root of the SVG it rasterizes, so the captured node itself must stay
+// normally positioned or it renders itself outside that SVG's viewport.
+.downloadCardWrapper {
+  @apply fixed top-0 left-[-9999px];
+}
+
+// Off-screen twin of .card, rendered only so html-to-image has a
+// horizontally-padded element to snapshot for the downloaded PNG. The
+// on-page .card has no horizontal padding so its text aligns with .actions.
+.downloadCard {
+  @apply flex w-[640px] flex-col gap-4 rounded-2xl bg-base-100 p-6;
 }
 
 .claim {
