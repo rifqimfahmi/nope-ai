@@ -1,132 +1,16 @@
 from collections.abc import AsyncIterator
 from functools import lru_cache
-from typing import Literal, TypedDict, cast
+from typing import cast
 
 from langchain_anthropic import ChatAnthropic
 from langgraph.graph import END, START, StateGraph
 from pydantic import SecretStr
 
 from app.config import Settings
-from app.prompts import (
-    CONTRARIAN_PROMPTS,
-    FEEDBACK_REVISION_PROMPT,
-    REVIEWER_FEWSHOT_MESSAGES,
-    REVIEWER_SYSTEM_PROMPT,
-)
 
-
-HISTORY_WINDOW = 3
-EM_DASH_FEEDBACK = "Drop the em dash, that crutch is banned on your watch."
-
-# USD per million tokens (input, output). Keep in sync with settings.agent_model /
-# settings.review_model — Anthropic doesn't expose pricing via the API.
-MODEL_PRICING: dict[str, tuple[float, float]] = {
-    "claude-haiku-4-5-20251001": (1.00, 5.00),
-    "claude-sonnet-4-6": (3.00, 15.00),
-}
-
-
-def _call_cost(model_id: str, usage: dict | None) -> float:
-    if not usage:
-        return 0.0
-    pricing = MODEL_PRICING.get(model_id)
-    if not pricing:
-        return 0.0
-    input_price, output_price = pricing
-    input_tokens = usage.get("input_tokens", 0)
-    output_tokens = usage.get("output_tokens", 0)
-    return (input_tokens / 1_000_000) * input_price + (output_tokens / 1_000_000) * output_price
-
-
-class ChallengeTurn(TypedDict):
-    draft: str
-    feedback: str
-
-
-class ChallengeState(TypedDict):
-    input: str
-    draft: str
-    feedback: str | None
-    iteration: int
-    approved: bool
-    history: list[ChallengeTurn]
-    cost: float
-
-
-class MessageEvent(TypedDict):
-    node: Literal["generate", "review"]
-    type: Literal["messages"]
-    content: str
-
-
-class UpdateEvent(ChallengeState):
-    node: Literal["generate", "review"]
-    type: Literal["updates"]
-
-
-class CompleteEvent(TypedDict):
-    type: Literal["complete"]
-    draft: str
-    cost: float
-
-
-StreamEvent = MessageEvent | UpdateEvent | CompleteEvent
-
-
-async def _generate(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
-    messages = [*CONTRARIAN_PROMPTS, {"role": "user", "content": state["input"]}]
-    for turn in state["history"][-HISTORY_WINDOW:]:
-        messages.append({"role": "assistant", "content": turn["draft"]})
-        messages.append(
-            {
-                "role": "user",
-                "content": FEEDBACK_REVISION_PROMPT.format(feedback=turn["feedback"]),
-            }
-        )
-    chunks = [chunk async for chunk in model.astream(messages)]
-    full = chunks[0]
-    for chunk in chunks[1:]:
-        full += chunk
-    cost = _call_cost(model.model, full.usage_metadata)
-    return {**state, "draft": full.text, "cost": state["cost"] + cost}
-
-
-async def _review(model: ChatAnthropic, state: ChallengeState) -> ChallengeState:
-    if "—" in state["draft"]:
-        history = [*state["history"], {"draft": state["draft"], "feedback": EM_DASH_FEEDBACK}][-HISTORY_WINDOW:]
-        return {
-            **state,
-            "approved": False,
-            "feedback": EM_DASH_FEEDBACK,
-            "iteration": state["iteration"] + 1,
-            "history": history,
-        }
-    messages = [
-        {"role": "system", "content": REVIEWER_SYSTEM_PROMPT},
-        *REVIEWER_FEWSHOT_MESSAGES,
-        {
-            "role": "user",
-            "content": f'User\'s fact: "{state["input"]}"\nChatbot\'s reply: "{state["draft"]}"',
-        },
-    ]
-    chunks = [chunk async for chunk in model.astream(messages)]
-    full = chunks[0]
-    for chunk in chunks[1:]:
-        full += chunk
-    cost = _call_cost(model.model, full.usage_metadata)
-    verdict = full.text.strip()
-    approved = verdict.upper() == "LGTM"
-    history = state["history"]
-    if not approved:
-        history = [*history, {"draft": state["draft"], "feedback": verdict}][-HISTORY_WINDOW:]
-    return {
-        **state,
-        "approved": approved,
-        "feedback": None if approved else verdict,
-        "iteration": state["iteration"] + 1,
-        "history": history,
-        "cost": state["cost"] + cost,
-    }
+from .generator import generate
+from .reviewer import review
+from .state import ChallengeState, CompleteEvent, MessageEvent, StreamEvent, UpdateEvent
 
 
 def _route(state: ChallengeState, max_loops: int) -> str:
@@ -146,10 +30,10 @@ def _compiled_graph(api_key: str, generate_model_name: str, review_model_name: s
     )
 
     async def generate_node(state: ChallengeState) -> ChallengeState:
-        return await _generate(generate_model, state)
+        return await generate(generate_model, state)
 
     async def review_node(state: ChallengeState) -> ChallengeState:
-        return await _review(review_model, state)
+        return await review(review_model, state)
 
     graph = StateGraph(ChallengeState)
     graph.add_node("generate", generate_node)
