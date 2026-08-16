@@ -96,15 +96,24 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
           </span>
           {disabled ? (
             <button
+              key="stop"
               className={styles.stop}
               type="button"
-              onClick={onCancel}
+              onClick={(event) => {
+                // Cancelling flips `disabled` back to false in the same tick, which
+                // would otherwise turn this button into the type="submit" one below
+                // (same slot, no key) before the browser finishes the click's default
+                // action - preventDefault stops that from re-submitting the form.
+                event.preventDefault();
+                onCancel();
+              }}
               aria-label="Stop generating"
             >
               <Square size={16} fill="currentColor" />
             </button>
           ) : (
             <button
+              key="submit"
               className={styles.submit}
               type="submit"
               disabled={value.trim().length === 0}
