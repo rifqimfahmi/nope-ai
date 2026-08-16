@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
+import { recordRateLimitHit } from "@/db/queries";
 import { isRateLimited } from "@/lib/rate-limit";
 import { challengeRequestSchema } from "@/lib/schemas";
 
@@ -23,7 +24,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "FASTAPI_URL is not set" }, { status: 500 });
   }
 
-  if (isRateLimited(getClientIp(request))) {
+  const clientIp = getClientIp(request);
+
+  if (isRateLimited(clientIp)) {
+    await recordRateLimitHit(clientIp);
     return NextResponse.json(
       { error: "Too many requests. Please slow down and try again shortly." },
       { status: 429, headers: { "Retry-After": "60" } },
