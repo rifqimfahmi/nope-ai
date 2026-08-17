@@ -104,11 +104,6 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
           <span className={styles.count}>
             {value.length}/{CHALLENGE_INPUT_MAX_LENGTH}
           </span>
-          {!disabled && (
-            <div className={styles.turnstile}>
-              <Turnstile ref={turnstileRef} onVerify={setTurnstileToken} />
-            </div>
-          )}
           {disabled ? (
             <button
               key="stop"
@@ -138,6 +133,12 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
           )}
         </div>
       </div>
+
+      {!disabled && (
+        <div className={styles.turnstile}>
+          <Turnstile ref={turnstileRef} onVerify={setTurnstileToken} />
+        </div>
+      )}
 
       {validationError && <p className={styles.error}>{validationError}</p>}
 
