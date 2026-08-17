@@ -142,9 +142,11 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
 
       {validationError && <p className={styles.error}>{validationError}</p>}
 
-      <div className={styles.phaseStatus}>
-        <PhaseStatus status={status} message={statusMessage} />
-      </div>
+      {statusMessage && (
+        <div className={styles.phaseStatus}>
+          <PhaseStatus status={status} message={statusMessage} />
+        </div>
+      )}
 
       {!disabled && (
         <div className={styles.examples}>
