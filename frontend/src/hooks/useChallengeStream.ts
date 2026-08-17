@@ -37,7 +37,7 @@ export function useChallengeStream(
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const start = useCallback(async (input: string) => {
+  const start = useCallback(async (input: string, turnstileToken: string) => {
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -46,7 +46,7 @@ export function useChallengeStream(
     setState({ status: "active", message: "", draft: "", error: null });
 
     try {
-      for await (const event of streamChallenge(input, controller.signal)) {
+      for await (const event of streamChallenge(input, turnstileToken, controller.signal)) {
         switch (event.type) {
           case "phase":
             setState((prev) => ({ ...prev, status: "active", message: event.content, error: null }));

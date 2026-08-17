@@ -100,6 +100,7 @@ services:
       # or robots.txt/sitemap.xml/canonical URLs ship pointing at localhost.
       args:
         - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set in .env}
+        - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY must be set in .env}
     restart: unless-stopped
     # Dev's 3000:3000 collides with other apps on this host - prod gets its
     # own free host port instead.
@@ -108,6 +109,17 @@ services:
     environment:
       - DATABASE_URL=postgres://${POSTGRES_USER:?POSTGRES_USER must be set in .env}:${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}@postgres-prod:5432/${POSTGRES_DB:?POSTGRES_DB must be set in .env}
       - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set in .env}
+      # Overrides the dev test key the base docker-compose.yml sets for this same
+      # var - without this, it'd leak through into the prod container's runtime
+      # env (merged from the base file) even though the served JS bundle is
+      # already correct via build.args above. Functionally inert today (only a
+      # "use client" component reads it, build-time-inlined), but kept in sync
+      # with build.args to avoid a misleading runtime env and match how
+      # NEXT_PUBLIC_SITE_URL is handled.
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY must be set in .env}
+      # Server-only, read at request time by /api/challenge-me (see route.ts) -
+      # unlike the NEXT_PUBLIC_ site key above, never inlined into client bundles.
+      - TURNSTILE_SECRET_KEY=${TURNSTILE_SECRET_KEY:?TURNSTILE_SECRET_KEY must be set in .env}
     # The dev stage's bind mount + anti-shadow volumes don't apply to the
     # self-contained runner image - clear them instead of running the
     # production container with the host's ./frontend mounted over it.

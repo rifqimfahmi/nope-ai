@@ -4,19 +4,74 @@ import { z } from "zod";
 import { db } from "@/db";
 import { challenges } from "@/db/schema";
 import { isRateLimited } from "@/lib/rate-limit";
-import { challengeRequestSchema } from "@/lib/schemas";
+import { challengeApiRequestSchema } from "@/lib/schemas";
 
 const FASTAPI_URL = process.env.FASTAPI_URL;
+const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY;
+const TURNSTILE_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+
+// Legit bodies are a few hundred bytes of JSON (input is capped to
+// CHALLENGE_INPUT_MAX_LENGTH chars); this just stops multi-MB payloads from
+// being fully buffered before Zod ever gets to reject them.
+const MAX_BODY_BYTES = 10_000;
 
 // Proxies to the FastAPI service so the browser only ever talks to this origin -
 // FastAPI is an internal upstream, not exposed to the client.
 export const dynamic = "force-dynamic";
 
-// Best-effort client IP: trust the first hop's x-forwarded-for since this
-// only ever sits behind our own reverse proxy/tunnel, never directly on the internet.
+// Number of trusted reverse-proxy/tunnel hops in front of this server (see
+// docker-compose.prod.yml - "never directly on the internet"). x-forwarded-for
+// is a comma-separated list that each hop *appends* to, so the last
+// TRUSTED_PROXY_HOPS entries are ones our own infra actually observed; anything
+// before that is client-supplied and trivially spoofable. Bump the env var if
+// another trusted proxy/CDN is ever added in front of the existing tunnel.
+const TRUSTED_PROXY_HOPS = Number(process.env.TRUSTED_PROXY_HOPS ?? "1");
+
 function getClientIp(request: Request): string {
   const forwardedFor = request.headers.get("x-forwarded-for");
-  return forwardedFor?.split(",")[0]?.trim() || "unknown";
+  if (!forwardedFor) return "unknown";
+
+  const hops = forwardedFor.split(",").map((ip) => ip.trim());
+  return hops[hops.length - TRUSTED_PROXY_HOPS] || "unknown";
+}
+
+type BodyReadResult =
+  | { ok: true; data: unknown }
+  | { ok: false; reason: "too_large" | "invalid_json" };
+
+// Reads the request body under a byte cap instead of `request.json()`, which
+// buffers the whole body (however large) before Zod gets a chance to reject it.
+async function readJsonBody(request: Request, maxBytes: number): Promise<BodyReadResult> {
+  const reader = request.body?.getReader();
+  if (!reader) return { ok: false, reason: "invalid_json" };
+
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel();
+      return { ok: false, reason: "too_large" };
+    }
+    chunks.push(value);
+  }
+
+  const buffer = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+
+  try {
+    return { ok: true, data: JSON.parse(new TextDecoder().decode(buffer)) };
+  } catch {
+    return { ok: false, reason: "invalid_json" };
+  }
 }
 
 interface CompleteEvent {
@@ -33,6 +88,27 @@ function isCompleteEvent(value: unknown): value is CompleteEvent {
     (value as { type?: unknown }).type === "complete" &&
     typeof (value as { content?: unknown }).content === "string"
   );
+}
+
+// Verifies a Turnstile token server-side (client-side widget completion alone
+// proves nothing - it's just a DOM callback firing). remoteIp is the same
+// trusted IP the rate limiter uses, passed through so Cloudflare can factor it
+// into its verdict.
+async function verifyTurnstileToken(token: string, remoteIp: string): Promise<boolean> {
+  const response = await fetch(TURNSTILE_VERIFY_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      secret: TURNSTILE_SECRET_KEY!,
+      response: token,
+      remoteip: remoteIp,
+    }),
+  });
+
+  if (!response.ok) return false;
+
+  const result = (await response.json()) as { success?: unknown };
+  return result.success === true;
 }
 
 // Parses one "data: {...}" SSE frame's JSON payload the same way lib/api/challenge.ts does client-side.
@@ -56,6 +132,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "FASTAPI_URL is not set" }, { status: 500 });
   }
 
+  if (!TURNSTILE_SECRET_KEY) {
+    return NextResponse.json({ error: "TURNSTILE_SECRET_KEY is not set" }, { status: 500 });
+  }
+
   const clientIp = getClientIp(request);
 
   if (isRateLimited(clientIp)) {
@@ -65,17 +145,32 @@ export async function POST(request: Request) {
     );
   }
 
-  const body = await request.json();
-  const parsed = challengeRequestSchema.safeParse(body);
+  const bodyResult = await readJsonBody(request, MAX_BODY_BYTES);
+  if (!bodyResult.ok) {
+    return NextResponse.json(
+      { error: bodyResult.reason === "too_large" ? "Request body too large." : "Invalid JSON body." },
+      { status: bodyResult.reason === "too_large" ? 413 : 400 },
+    );
+  }
+
+  const parsed = challengeApiRequestSchema.safeParse(bodyResult.data);
 
   if (!parsed.success) {
     return NextResponse.json({ error: z.treeifyError(parsed.error) }, { status: 400 });
   }
 
+  const verified = await verifyTurnstileToken(parsed.data.turnstileToken, clientIp);
+  if (!verified) {
+    return NextResponse.json(
+      { error: "Verification failed. Please try again." },
+      { status: 403 },
+    );
+  }
+
   const upstream = await fetch(`${FASTAPI_URL}/challenge-me`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(parsed.data),
+    body: JSON.stringify({ input: parsed.data.input }),
     signal: request.signal,
   });
 

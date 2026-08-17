@@ -1,5 +1,5 @@
 import {
-  challengeRequestSchema,
+  challengeApiRequestSchema,
   streamEventSchema,
   type StreamEvent,
 } from "@/lib/schemas";
@@ -19,12 +19,13 @@ function parseSseEvent(rawEvent: string): StreamEvent | null {
 /** Streams our own `/api/challenge-me` proxy (which forwards to the FastAPI service), yielding parsed SSE events as they arrive. */
 export async function* streamChallenge(
   input: string,
+  turnstileToken: string,
   signal?: AbortSignal,
 ): AsyncGenerator<StreamEvent> {
   const response = await fetch("/api/challenge-me", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(challengeRequestSchema.parse({ input })),
+    body: JSON.stringify(challengeApiRequestSchema.parse({ input, turnstileToken })),
     signal,
   });
 

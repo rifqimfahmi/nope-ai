@@ -72,6 +72,12 @@ services:
       # `docker compose up -d`, so it aborts. CI=true is pnpm's own documented
       # bypass for this exact non-interactive case.
       - CI=true
+      # Cloudflare's published always-pass test keys (see
+      # https://developers.cloudflare.com/turnstile/troubleshooting/testing/) -
+      # public and identical for every contributor, so safe to commit. Prod
+      # requires real ones instead (see docker-compose.prod.yml / .env.example).
+      - NEXT_PUBLIC_TURNSTILE_SITE_KEY=1x00000000000000000000AA
+      - TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
     volumes:
       - ./frontend:/app
       - frontend-node-modules:/app/node_modules

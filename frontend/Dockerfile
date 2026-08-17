@@ -19,16 +19,20 @@ CMD ["sh", "-c", "pnpm db:migrate && pnpm dev"]
 # calls this app's own route handlers, which read FASTAPI_URL/DATABASE_URL at
 # request time in the runner stage below.
 #
-# NEXT_PUBLIC_SITE_URL is the one exception - it's NEXT_PUBLIC_-prefixed, so
-# Next.js inlines it into the compiled output at `pnpm build` time, not read
-# at runtime. Must be passed as a build ARG (see docker-compose.prod.yml's
-# frontend build.args); without it this falls back to localhost, which is
-# what robots.txt/sitemap.xml/canonical URLs would ship to production.
+# NEXT_PUBLIC_SITE_URL and NEXT_PUBLIC_TURNSTILE_SITE_KEY are the exceptions -
+# they're NEXT_PUBLIC_-prefixed, so Next.js inlines them into the compiled
+# output at `pnpm build` time, not read at runtime. Must be passed as build
+# ARGs (see docker-compose.prod.yml's frontend build.args); without
+# NEXT_PUBLIC_SITE_URL this falls back to localhost (robots.txt/sitemap.xml/
+# canonical URLs), and without NEXT_PUBLIC_TURNSTILE_SITE_KEY the Turnstile
+# widget never renders, so submissions always fail server-side verification.
 FROM deps AS builder
 COPY . .
 
 ARG NEXT_PUBLIC_SITE_URL
+ARG NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_PUBLIC_SITE_URL=$NEXT_PUBLIC_SITE_URL
+ENV NEXT_PUBLIC_TURNSTILE_SITE_KEY=$NEXT_PUBLIC_TURNSTILE_SITE_KEY
 ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN pnpm build

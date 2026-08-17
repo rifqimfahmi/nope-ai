@@ -52,6 +52,10 @@
   }
 }
 
+.turnstile {
+  @apply flex items-center;
+}
+
 .error {
   @apply text-sm text-error;
 }
