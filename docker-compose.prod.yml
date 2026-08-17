@@ -150,7 +150,7 @@ services:
     volumes:
       - ./metabase-data-prod:/metabase-data
     ports:
-      - "127.0.0.1:3005:3000" # dev uses 3004
+      - "127.0.0.1:3009:3000" # dev uses 3004
     depends_on:
       - postgres-prod
 
