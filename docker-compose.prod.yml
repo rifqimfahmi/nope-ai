@@ -101,6 +101,7 @@ services:
       args:
         - NEXT_PUBLIC_SITE_URL=${NEXT_PUBLIC_SITE_URL:?NEXT_PUBLIC_SITE_URL must be set in .env}
         - NEXT_PUBLIC_TURNSTILE_SITE_KEY=${NEXT_PUBLIC_TURNSTILE_SITE_KEY:?NEXT_PUBLIC_TURNSTILE_SITE_KEY must be set in .env}
+        - NEXT_PUBLIC_PLAUSIBLE_URL=${NEXT_PUBLIC_PLAUSIBLE_URL:?NEXT_PUBLIC_PLAUSIBLE_URL must be set in .env}
     restart: unless-stopped
     # Dev's 3000:3000 collides with other apps on this host - prod gets its
     # own free host port instead.
