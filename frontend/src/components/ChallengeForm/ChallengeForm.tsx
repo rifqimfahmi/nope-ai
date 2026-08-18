@@ -37,6 +37,7 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
   const [validationError, setValidationError] = useState<string | null>(null);
   const [placeholderIndex, setPlaceholderIndex] = useState(0);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [verifying, setVerifying] = useState(false);
   const turnstileRef = useRef<TurnstileHandle>(null);
   const plausible = usePlausible<AnalyticsEvents>();
 
@@ -48,7 +49,7 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
     return () => clearInterval(interval);
   }, [value]);
 
-  function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const parsed = challengeRequestSchema.safeParse({ input: value });
     if (!parsed.success) {
@@ -58,7 +59,22 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
       setValidationError(parsed.error.issues[0]?.message ?? "Invalid input.");
       return;
     }
-    if (!turnstileToken) {
+
+    let token = turnstileToken;
+    if (!token) {
+      // The invisible widget verifies asynchronously right after it mounts, so a
+      // fast submit can beat it here - wait for that in-flight check instead of
+      // failing outright (this is the common case on real network latency; the
+      // dev test key resolves near-instantly, so this path barely fires there).
+      setVerifying(true);
+      try {
+        token = (await turnstileRef.current?.getToken()) ?? null;
+      } catch {
+        token = null;
+      }
+      setVerifying(false);
+    }
+    if (!token) {
       setValidationError("Please complete the verification.");
       return;
     }
@@ -69,7 +85,7 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
         used_example: EXAMPLES.includes(parsed.data.input),
       },
     });
-    onSubmit(parsed.data.input, turnstileToken);
+    onSubmit(parsed.data.input, token);
     // Tokens are single-use - reset so a retry (network error, upstream 4xx/5xx)
     // gets a fresh one instead of silently failing verification again.
     turnstileRef.current?.reset();
@@ -126,9 +142,9 @@ export function ChallengeForm({ onSubmit, onCancel, disabled, status, statusMess
               key="submit"
               className={styles.submit}
               type="submit"
-              disabled={value.trim().length === 0}
+              disabled={value.trim().length === 0 || verifying}
             >
-              Nope →
+              {verifying ? "Verifying…" : "Nope →"}
             </button>
           )}
         </div>

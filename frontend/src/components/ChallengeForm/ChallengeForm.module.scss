@@ -53,7 +53,9 @@
 }
 
 .turnstile {
-  @apply flex justify-center;
+  // size: "flexible" fills 100% of this element's width - cap and center it
+  // so it doesn't stretch across the whole card on wide screens.
+  @apply mx-auto w-full max-w-80;
 }
 
 .error {
