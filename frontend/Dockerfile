@@ -1,5 +1,5 @@
 # Stage: deps - install dependencies once, shared by the dev and builder stages below.
-FROM node:22-alpine AS deps
+FROM node:24.22.1-alpine AS deps
 WORKDIR /app
 RUN corepack enable
 
@@ -49,7 +49,7 @@ RUN pnpm build
 #
 # Run `pnpm db:migrate` against the target database as a separate deploy step -
 # drizzle-kit is a devDependency and isn't present in this stage.
-FROM node:22-alpine AS runner
+FROM node:24.22.1-alpine AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
